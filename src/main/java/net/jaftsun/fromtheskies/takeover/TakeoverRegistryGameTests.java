@@ -378,6 +378,38 @@ public final class TakeoverRegistryGameTests {
     helper.succeed();
   }
 
+  @GameTest(template = "empty")
+  public static void surface_infection_counts_correct(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    ChunkPos chunkPos = new ChunkPos(40, 40);
+    BlockPos surfaceA = new BlockPos(chunkPos.getMinBlockX() + 1, 80, chunkPos.getMinBlockZ() + 1);
+    BlockPos surfaceB = new BlockPos(chunkPos.getMinBlockX() + 2, 80, chunkPos.getMinBlockZ() + 1);
+    BlockPos surfaceC = new BlockPos(chunkPos.getMinBlockX() + 1, 80, chunkPos.getMinBlockZ() + 2);
+    BlockPos surfaceD = new BlockPos(chunkPos.getMinBlockX() + 2, 80, chunkPos.getMinBlockZ() + 2);
+    List<BlockPos> eligiblePositions = List.of(surfaceA, surfaceB, surfaceC, surfaceD);
+    SurfaceSpreadService.updateChunkCountsFromEligiblePositions(data, chunkPos, eligiblePositions);
+    int eligibleCount = data.getEligibleSurfaceCount(chunkPos);
+    helper.assertTrue(eligibleCount == 4, "Expected explicit eligible-position model to track four eligible surfaces");
+    helper.assertTrue(data.getInfectedSurfaceCount(chunkPos) == 0, "Expected no infected blocks before seeding");
+
+    data.addInfectedSurfaceBlock(surfaceA);
+    data.addInfectedSurfaceBlock(surfaceD);
+    SurfaceSpreadService.updateChunkCountsFromEligiblePositions(data, chunkPos, eligiblePositions);
+    helper.assertTrue(
+        data.getEligibleSurfaceCount(chunkPos) == eligibleCount,
+        "Expected eligible count to remain stable after infection updates");
+    helper.assertTrue(
+        data.getInfectedSurfaceCount(chunkPos) == 2,
+        "Expected infected count to match the number of seeded infected surface blocks");
+    helper.assertTrue(
+        data.hasInfectedSurfaceBlock(surfaceA) && data.hasInfectedSurfaceBlock(surfaceD),
+        "Expected infected surface position tracking set to contain the seeded positions");
+    helper.succeed();
+  }
+
   private static ChunkPos nextUnindexedChunk(TakeoverSavedData data, int startX, int startZ) {
     for (int offset = 0; offset < 4096; offset++) {
       ChunkPos candidate = new ChunkPos(startX + offset, startZ + offset);

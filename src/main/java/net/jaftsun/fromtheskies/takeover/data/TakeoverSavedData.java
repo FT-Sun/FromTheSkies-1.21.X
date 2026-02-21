@@ -194,6 +194,14 @@ public class TakeoverSavedData extends SavedData {
         }
     }
 
+    public boolean hasInfectedSurfaceBlock(BlockPos pos) {
+        return this.infectedSurfaceBlockLongs.contains(pos.asLong());
+    }
+
+    public int getInfectedSurfaceBlockCount() {
+        return this.infectedSurfaceBlockLongs.size();
+    }
+
     public Set<ChunkPos> getConvertedChunks() {
         return unpackChunkSet(this.convertedChunkLongs);
     }
@@ -202,6 +210,14 @@ public class TakeoverSavedData extends SavedData {
         if (this.convertedChunkLongs.add(chunkPos.toLong())) {
             this.setDirty();
         }
+    }
+
+    public boolean hasConvertedChunk(ChunkPos chunkPos) {
+        return this.convertedChunkLongs.contains(chunkPos.toLong());
+    }
+
+    public int getConvertedChunkCount() {
+        return this.convertedChunkLongs.size();
     }
 
     public int getEligibleSurfaceCount(ChunkPos chunkPos) {
