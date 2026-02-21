@@ -7,6 +7,7 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import net.jaftsun.fromtheskies.Config;
 import net.jaftsun.fromtheskies.FromTheSkies;
 import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.takeover.command.TakeoverCommands;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
 import net.jaftsun.fromtheskies.takeover.world.MeteorSchedulerService;
@@ -631,8 +632,8 @@ public final class TakeoverRegistryGameTests {
 
     BlockPos source = helper.absolutePos(new BlockPos(1, 1, 1));
     BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
-    level.setBlock(source, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
-    level.setBlock(target, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
     data.addGeneratedChunk(new ChunkPos(source));
     data.addGeneratedChunk(new ChunkPos(target));
     data.addInfectedSurfaceBlock(source);
