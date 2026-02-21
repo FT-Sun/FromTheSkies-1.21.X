@@ -4,16 +4,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.jaftsun.fromtheskies.Config;
+import net.jaftsun.fromtheskies.registry.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.TakeoverLifecycleState;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class SurfaceSpreadService {
+    private static final int[][] INITIAL_SEED_OFFSETS = new int[][] {
+            { 1, 0 },
+            { -1, 0 },
+            { 0, 1 },
+            { 0, -1 },
+            { 0, 0 },
+            { 1, 1 },
+            { 1, -1 },
+            { -1, 1 },
+            { -1, -1 }
+    };
+
     private SurfaceSpreadService() {
     }
 
@@ -42,7 +56,20 @@ public final class SurfaceSpreadService {
             return 0;
         }
         data.setLastSpreadTickGameTime(gameTime);
-        return 0;
+        seedInitialInfectionIfNeeded(level, data);
+        int successfulSpreads = 0;
+        for (int attempt = 0; attempt < Math.max(1, spreadAttemptsPerTick); attempt++) {
+            List<BlockPos> infectedBlocks = new ArrayList<>(data.getInfectedSurfaceBlocks());
+            if (infectedBlocks.isEmpty()) {
+                break;
+            }
+            BlockPos source = infectedBlocks.get(random.nextInt(infectedBlocks.size()));
+            Direction direction = Direction.Plane.HORIZONTAL.getRandomDirection(random);
+            if (spreadFromSourceForTesting(level, data, source, direction.getStepX(), direction.getStepZ(), true)) {
+                successfulSpreads++;
+            }
+        }
+        return successfulSpreads;
     }
 
     public static int recalculateChunkSurface(ServerLevel level, TakeoverSavedData data, ChunkPos chunkPos) {
@@ -87,13 +114,7 @@ public final class SurfaceSpreadService {
         if (topSurface == null || !topSurface.equals(pos) || data.hasInfectedSurfaceBlock(pos)) {
             return false;
         }
-        data.addInfectedSurfaceBlock(pos);
-        ChunkPos chunkPos = new ChunkPos(pos);
-        if (data.getEligibleSurfaceCount(chunkPos) <= 0) {
-            recalculateChunkSurface(level, data, chunkPos);
-        }
-        data.setInfectedSurfaceCount(chunkPos, data.getInfectedSurfaceCount(chunkPos) + 1);
-        return true;
+        return infectSurfaceBlock(level, data, pos);
     }
 
     public static boolean spreadFromSourceForTesting(
@@ -120,18 +141,7 @@ public final class SurfaceSpreadService {
             return false;
         }
 
-        data.addInfectedSurfaceBlock(target);
-        recalculateChunkSurface(level, data, sourceChunk);
-        BiomeConversionService.applyChunkThresholdCheck(level, data, sourceChunk, Config.TAKEOVER_CHUNK_BIOME_FLIP_THRESHOLD.get());
-        if (!targetChunk.equals(sourceChunk)) {
-            recalculateChunkSurface(level, data, targetChunk);
-            BiomeConversionService.applyChunkThresholdCheck(
-                    level,
-                    data,
-                    targetChunk,
-                    Config.TAKEOVER_CHUNK_BIOME_FLIP_THRESHOLD.get());
-        }
-        return true;
+        return infectSurfaceBlock(level, data, target);
     }
 
     public static boolean isEligibleSurface(ServerLevel level, BlockPos pos) {
@@ -157,6 +167,51 @@ public final class SurfaceSpreadService {
     }
 
     private static boolean isEligibleSurfaceBlock(BlockState state) {
-        return state.is(Blocks.MOSS_BLOCK);
+        return !state.isAir()
+                && state.getFluidState().isEmpty()
+                && !state.is(ModBlocks.ALIEN_CORE.get());
+    }
+
+    private static void seedInitialInfectionIfNeeded(ServerLevel level, TakeoverSavedData data) {
+        if (data.getState() != TakeoverLifecycleState.ACTIVE || data.getCorePos() == null || data.getInfectedSurfaceBlockCount() > 0) {
+            return;
+        }
+
+        BlockPos corePos = data.getCorePos();
+        for (int[] offset : INITIAL_SEED_OFFSETS) {
+            BlockPos candidate = findTopEligibleSurface(level, corePos.getX() + offset[0], corePos.getZ() + offset[1]);
+            if (candidate == null) {
+                continue;
+            }
+            if (!data.hasGeneratedChunk(new ChunkPos(candidate))) {
+                continue;
+            }
+            if (infectSurfaceBlock(level, data, candidate)) {
+                return;
+            }
+        }
+    }
+
+    private static boolean infectSurfaceBlock(ServerLevel level, TakeoverSavedData data, BlockPos pos) {
+        if (data.hasInfectedSurfaceBlock(pos)) {
+            return false;
+        }
+
+        data.addInfectedSurfaceBlock(pos);
+        applyVisualInfection(level, pos);
+        ChunkPos chunkPos = new ChunkPos(pos);
+        if (data.getEligibleSurfaceCount(chunkPos) <= 0) {
+            recalculateChunkSurface(level, data, chunkPos);
+        } else {
+            data.setInfectedSurfaceCount(chunkPos, data.getInfectedSurfaceCount(chunkPos) + 1);
+        }
+        BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, Config.TAKEOVER_CHUNK_BIOME_FLIP_THRESHOLD.get());
+        return true;
+    }
+
+    private static void applyVisualInfection(ServerLevel level, BlockPos pos) {
+        if (!level.getBlockState(pos).is(Blocks.SCULK)) {
+            level.setBlock(pos, Blocks.SCULK.defaultBlockState(), 3);
+        }
     }
 }

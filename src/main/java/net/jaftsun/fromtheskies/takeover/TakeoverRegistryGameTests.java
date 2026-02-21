@@ -25,6 +25,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.util.RandomSource;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -412,6 +413,69 @@ public final class TakeoverRegistryGameTests {
   }
 
   @GameTest(template = "empty")
+  public static void active_core_seeds_initial_infection(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+    data.setState(TakeoverLifecycleState.ACTIVE);
+
+    BlockPos corePos = helper.absolutePos(new BlockPos(5, 2, 5));
+    BlockPos seedCandidate = corePos.east();
+    level.setBlock(seedCandidate, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(corePos.north(), Blocks.STONE.defaultBlockState(), 3);
+    level.setBlock(corePos.south(), Blocks.STONE.defaultBlockState(), 3);
+    level.setBlock(corePos.west(), Blocks.STONE.defaultBlockState(), 3);
+
+    data.setCorePos(corePos);
+    data.addGeneratedChunk(new ChunkPos(corePos));
+    TakeoverCoreService.placeCoreIfNeeded(level, data);
+
+    int spreads = SurfaceSpreadService.tick(
+        level,
+        data,
+        1,
+        1,
+        RandomSource.create(71L),
+        700L);
+
+    helper.assertTrue(spreads >= 0, "Expected spread tick to execute while ACTIVE");
+    helper.assertTrue(
+        data.getInfectedSurfaceBlockCount() >= 1,
+        "Expected active takeover tick to seed initial infection near the core when none exists");
+    helper.assertTrue(
+        data.hasInfectedSurfaceBlock(seedCandidate),
+        "Expected deterministic nearest eligible surface around core to be seeded as infected");
+    helper.assertTrue(
+        level.getBlockState(seedCandidate).is(Blocks.SCULK),
+        "Expected seeded infection to mutate the world block for visible takeover progression");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void top_surface_spread_converts_target_to_sculk(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+    data.setState(TakeoverLifecycleState.ACTIVE);
+
+    BlockPos source = helper.absolutePos(new BlockPos(1, 2, 1));
+    BlockPos target = helper.absolutePos(new BlockPos(2, 2, 1));
+    level.setBlock(source, Blocks.SAND.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.SAND.defaultBlockState(), 3);
+    data.addGeneratedChunk(new ChunkPos(source));
+    data.addGeneratedChunk(new ChunkPos(target));
+
+    data.addInfectedSurfaceBlock(source);
+    boolean spread = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
+    helper.assertTrue(spread, "Expected grass-like local spread to operate on natural surface blocks");
+    helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected target natural surface block to become infected");
+    helper.assertTrue(
+        level.getBlockState(target).is(Blocks.SCULK),
+        "Expected infected natural surface block to visually convert for client validation");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
   public static void grass_like_local_spread(GameTestHelper helper) {
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
@@ -421,9 +485,9 @@ public final class TakeoverRegistryGameTests {
     BlockPos source = helper.absolutePos(new BlockPos(1, 1, 1));
     BlockPos adjacent = helper.absolutePos(new BlockPos(2, 1, 1));
     BlockPos farther = helper.absolutePos(new BlockPos(3, 1, 1));
-    level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
-    level.setBlock(adjacent, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
-    level.setBlock(farther, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(source, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(adjacent, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(farther, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
     data.addGeneratedChunk(new ChunkPos(source));
     data.addGeneratedChunk(new ChunkPos(adjacent));
     data.addGeneratedChunk(new ChunkPos(farther));
@@ -449,8 +513,8 @@ public final class TakeoverRegistryGameTests {
 
     BlockPos source = helper.absolutePos(new BlockPos(1, 1, 1));
     BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
-    level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
-    level.setBlock(target, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(source, Blocks.DIRT.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.DIRT.defaultBlockState(), 3);
     data.addGeneratedChunk(new ChunkPos(source));
     data.addGeneratedChunk(new ChunkPos(target));
 
@@ -470,8 +534,8 @@ public final class TakeoverRegistryGameTests {
 
     BlockPos source = new BlockPos(15, 80, 0);
     BlockPos target = new BlockPos(16, 80, 0);
-    level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
-    level.setBlock(target, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(source, Blocks.STONE.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.STONE.defaultBlockState(), 3);
 
     ChunkPos sourceChunk = new ChunkPos(source);
     ChunkPos targetChunk = new ChunkPos(target);
@@ -489,6 +553,105 @@ public final class TakeoverRegistryGameTests {
     boolean resumed = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
     helper.assertTrue(resumed, "Expected spread to continue after adjacent chunk is indexed");
     helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected indexed frontier target to become infected");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void stop_halts_future_spread(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+    data.setState(TakeoverLifecycleState.ACTIVE);
+
+    BlockPos source = helper.absolutePos(new BlockPos(1, 1, 1));
+    BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
+    BlockPos next = helper.absolutePos(new BlockPos(3, 1, 1));
+    level.setBlock(source, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(next, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    data.addGeneratedChunk(new ChunkPos(source));
+    data.addGeneratedChunk(new ChunkPos(target));
+    data.addGeneratedChunk(new ChunkPos(next));
+    data.addInfectedSurfaceBlock(source);
+
+    boolean spreadWhileActive = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
+    helper.assertTrue(spreadWhileActive, "Expected spread to work while lifecycle is ACTIVE");
+    helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected first active spread step to infect target");
+
+    int infectedBeforeStop = data.getInfectedSurfaceBlockCount();
+    data.setState(TakeoverLifecycleState.STOPPED);
+    boolean spreadAfterStop = SurfaceSpreadService.spreadFromSourceForTesting(level, data, target, 1, 0, true);
+    helper.assertTrue(!spreadAfterStop, "Expected spread attempts to be blocked once lifecycle is STOPPED");
+    helper.assertTrue(
+        data.getInfectedSurfaceBlockCount() == infectedBeforeStop,
+        "Expected infected counters to stop increasing after STOPPED transition");
+    helper.assertTrue(!data.hasInfectedSurfaceBlock(next), "Expected no new infections after STOPPED transition");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void no_rollback_after_stop(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    ChunkPos convertedChunk = new ChunkPos(96, 96);
+    data.setEligibleSurfaceCount(convertedChunk, 10);
+    data.setInfectedSurfaceCount(convertedChunk, 6);
+    BiomeConversionService.applyChunkThresholdCheck(level, data, convertedChunk, 0.5D);
+    data.setState(TakeoverLifecycleState.STOPPED);
+
+    int infectedCountBefore = data.getInfectedSurfaceCount(convertedChunk);
+    int spreadAttemptsAfterStop = SurfaceSpreadService.tick(
+        level,
+        data,
+        1,
+        8,
+        RandomSource.create(11L),
+        500L);
+    helper.assertTrue(spreadAttemptsAfterStop == 0, "Expected STOPPED state to halt future spread ticks");
+    helper.assertTrue(
+        data.getInfectedSurfaceCount(convertedChunk) == infectedCountBefore,
+        "Expected infected count to remain unchanged after STOPPED tick advance");
+
+    CompoundTag saved = data.save(new CompoundTag(), level.registryAccess());
+    TakeoverSavedData loaded = TakeoverSavedData.load(saved, level.registryAccess());
+    helper.assertTrue(loaded.hasConvertedChunk(convertedChunk), "Expected converted chunk state to persist after save/load");
+    helper.assertTrue(
+        loaded.getInfectedSurfaceCount(convertedChunk) == infectedCountBefore,
+        "Expected infected counters to persist without rollback after save/load");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void debug_commands_transition_state(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    BlockPos source = helper.absolutePos(new BlockPos(1, 1, 1));
+    BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
+    level.setBlock(source, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+    data.addGeneratedChunk(new ChunkPos(source));
+    data.addGeneratedChunk(new ChunkPos(target));
+    data.addInfectedSurfaceBlock(source);
+
+    int armed = TakeoverCommands.forceArm(level, data);
+    helper.assertTrue(armed == 1, "Expected force_arm command handler to arm takeover state");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.ARMED, "Expected lifecycle state to be ARMED after force_arm");
+
+    int meteor = TakeoverCommands.forceMeteor(level, data);
+    helper.assertTrue(meteor == 1, "Expected force_meteor command handler to activate takeover");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.ACTIVE, "Expected lifecycle state to be ACTIVE after force_meteor");
+    helper.assertTrue(data.getCorePos() != null, "Expected force_meteor to select a core position");
+
+    int stepped = TakeoverCommands.stepSpread(level, data, 1);
+    helper.assertTrue(stepped >= 0, "Expected step command handler to execute spread ticks without error");
+
+    int stopped = TakeoverCommands.forceStop(level, data);
+    helper.assertTrue(stopped == 1, "Expected stop command handler to return success");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.STOPPED, "Expected lifecycle state to become STOPPED");
     helper.succeed();
   }
 
