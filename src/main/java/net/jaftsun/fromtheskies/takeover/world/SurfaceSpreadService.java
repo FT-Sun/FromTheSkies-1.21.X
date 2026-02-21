@@ -96,6 +96,39 @@ public final class SurfaceSpreadService {
         return true;
     }
 
+    public static boolean spreadFromSourceForTesting(
+            ServerLevel level,
+            TakeoverSavedData data,
+            BlockPos source,
+            int offsetX,
+            int offsetZ,
+            boolean requireSourceInfected) {
+        if (requireSourceInfected && !data.hasInfectedSurfaceBlock(source)) {
+            return false;
+        }
+        if (Math.abs(offsetX) + Math.abs(offsetZ) != 1) {
+            return false;
+        }
+        BlockPos target = findTopEligibleSurface(level, source.getX() + offsetX, source.getZ() + offsetZ);
+        if (target == null || data.hasInfectedSurfaceBlock(target)) {
+            return false;
+        }
+        data.addInfectedSurfaceBlock(target);
+        ChunkPos sourceChunk = new ChunkPos(source);
+        ChunkPos targetChunk = new ChunkPos(target);
+        recalculateChunkSurface(level, data, sourceChunk);
+        BiomeConversionService.applyChunkThresholdCheck(level, data, sourceChunk, Config.TAKEOVER_CHUNK_BIOME_FLIP_THRESHOLD.get());
+        if (!targetChunk.equals(sourceChunk)) {
+            recalculateChunkSurface(level, data, targetChunk);
+            BiomeConversionService.applyChunkThresholdCheck(
+                    level,
+                    data,
+                    targetChunk,
+                    Config.TAKEOVER_CHUNK_BIOME_FLIP_THRESHOLD.get());
+        }
+        return true;
+    }
+
     public static boolean isEligibleSurface(ServerLevel level, BlockPos pos) {
         BlockPos topSurface = findTopEligibleSurface(level, pos.getX(), pos.getZ());
         return topSurface != null && topSurface.equals(pos);

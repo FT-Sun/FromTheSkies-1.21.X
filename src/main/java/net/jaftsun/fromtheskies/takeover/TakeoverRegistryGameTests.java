@@ -10,6 +10,7 @@ import net.jaftsun.fromtheskies.registry.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
 import net.jaftsun.fromtheskies.takeover.world.MeteorSchedulerService;
+import net.jaftsun.fromtheskies.takeover.world.BiomeConversionService;
 import net.jaftsun.fromtheskies.takeover.world.SurfaceSpreadService;
 import net.jaftsun.fromtheskies.takeover.world.TakeoverCoreService;
 import net.minecraft.nbt.CompoundTag;
@@ -407,6 +408,75 @@ public final class TakeoverRegistryGameTests {
     helper.assertTrue(
         data.hasInfectedSurfaceBlock(surfaceA) && data.hasInfectedSurfaceBlock(surfaceD),
         "Expected infected surface position tracking set to contain the seeded positions");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void grass_like_local_spread(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+    data.setState(TakeoverLifecycleState.ACTIVE);
+
+    BlockPos source = helper.absolutePos(new BlockPos(1, 1, 1));
+    BlockPos adjacent = helper.absolutePos(new BlockPos(2, 1, 1));
+    BlockPos farther = helper.absolutePos(new BlockPos(3, 1, 1));
+    level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(adjacent, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(farther, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+
+    data.addInfectedSurfaceBlock(source);
+    boolean firstSpread = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
+    helper.assertTrue(firstSpread, "Expected spread to infect adjacent eligible block");
+    helper.assertTrue(data.hasInfectedSurfaceBlock(adjacent), "Expected first spread step to infect adjacent position");
+    helper.assertTrue(!data.hasInfectedSurfaceBlock(farther), "Expected spread not to skip directly to non-adjacent position");
+
+    boolean secondSpread = SurfaceSpreadService.spreadFromSourceForTesting(level, data, adjacent, 1, 0, true);
+    helper.assertTrue(secondSpread, "Expected contiguous spread step from newly infected adjacent position");
+    helper.assertTrue(data.hasInfectedSurfaceBlock(farther), "Expected second contiguous spread step to infect next local position");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void spread_ignores_light(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+    data.setState(TakeoverLifecycleState.ACTIVE);
+
+    BlockPos source = helper.absolutePos(new BlockPos(1, 1, 1));
+    BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
+    level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+
+    data.addInfectedSurfaceBlock(source);
+    boolean spread = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
+    helper.assertTrue(spread, "Expected spread to occur without any light-level gating");
+    helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected low block-light target to become infected");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void chunk_threshold_biome_flip(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    ChunkPos chunkPos = new ChunkPos(64, 64);
+    data.setEligibleSurfaceCount(chunkPos, 10);
+    data.setInfectedSurfaceCount(chunkPos, 3);
+    boolean belowThreshold = BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, 0.4D);
+    helper.assertTrue(!belowThreshold, "Expected chunk below threshold to not convert");
+    helper.assertTrue(!data.hasConvertedChunk(chunkPos), "Expected chunk to remain unconverted below threshold");
+
+    data.setInfectedSurfaceCount(chunkPos, 4);
+    boolean atThreshold = BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, 0.4D);
+    helper.assertTrue(atThreshold, "Expected chunk at threshold to convert");
+    helper.assertTrue(data.hasConvertedChunk(chunkPos), "Expected converted chunk set to include threshold-hit chunk");
+
+    boolean idempotentRecheck = BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, 0.4D);
+    helper.assertTrue(!idempotentRecheck, "Expected repeated threshold checks to remain idempotent after conversion");
+    helper.assertTrue(data.getConvertedChunkCount() == 1, "Expected converted chunk count to remain stable after recheck");
     helper.succeed();
   }
 
