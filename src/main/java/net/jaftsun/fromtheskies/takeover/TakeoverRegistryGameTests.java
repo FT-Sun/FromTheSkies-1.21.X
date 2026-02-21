@@ -8,6 +8,7 @@ import net.jaftsun.fromtheskies.Config;
 import net.jaftsun.fromtheskies.FromTheSkies;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
+import net.jaftsun.fromtheskies.takeover.world.MeteorSchedulerService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -20,6 +21,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.util.RandomSource;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -234,6 +236,104 @@ public final class TakeoverRegistryGameTests {
     helper.assertTrue(
         endData.getGeneratedChunkCount() == endBefore,
         "Expected End generated chunk index to remain unchanged");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void scheduler_waits_for_threshold(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    ChunkPos indexedA = new ChunkPos(1000, 1000);
+    ChunkPos indexedB = new ChunkPos(1001, 1001);
+    data.addGeneratedChunk(indexedA);
+    MeteorSchedulerService.SchedulerSettings settings = new MeteorSchedulerService.SchedulerSettings(2, 3, 3, 10);
+    RandomSource random = RandomSource.create(42L);
+
+    MeteorSchedulerService.TickResult beforeThreshold = MeteorSchedulerService.tick(
+        level,
+        data,
+        settings,
+        random,
+        100L);
+    helper.assertTrue(!beforeThreshold.armedThisTick(), "Expected scheduler to stay dormant before threshold");
+    helper.assertTrue(!beforeThreshold.triggeredThisTick(), "Expected no meteor trigger before threshold");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.DORMANT, "Expected lifecycle state to remain DORMANT");
+
+    data.addGeneratedChunk(indexedB);
+    MeteorSchedulerService.TickResult armedTick = MeteorSchedulerService.tick(
+        level,
+        data,
+        settings,
+        random,
+        101L);
+    helper.assertTrue(armedTick.armedThisTick(), "Expected scheduler to arm once threshold is reached");
+    helper.assertTrue(!armedTick.triggeredThisTick(), "Expected meteor not to trigger immediately after arming");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.ARMED, "Expected lifecycle state to transition to ARMED");
+    helper.assertTrue(data.getScheduledMeteorGameTime() == 104L, "Expected meteor to schedule within configured window");
+
+    MeteorSchedulerService.TickResult waitingTick = MeteorSchedulerService.tick(
+        level,
+        data,
+        settings,
+        random,
+        103L);
+    helper.assertTrue(!waitingTick.triggeredThisTick(), "Expected scheduler to wait until scheduled game time");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.ARMED, "Expected lifecycle state to remain ARMED while waiting");
+
+    MeteorSchedulerService.TickResult triggerTick = MeteorSchedulerService.tick(
+        level,
+        data,
+        settings,
+        random,
+        104L);
+    helper.assertTrue(triggerTick.triggeredThisTick(), "Expected meteor to trigger at scheduled game time");
+    helper.assertTrue(data.isTakeoverLocked(), "Expected takeover to lock after first trigger");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.ACTIVE, "Expected lifecycle state to transition to ACTIVE");
+    helper.assertTrue(data.getCorePos() != null, "Expected scheduler trigger to choose and store a core landing position");
+    helper.assertTrue(
+        data.hasGeneratedChunk(new ChunkPos(data.getCorePos())),
+        "Expected selected landing chunk to come from generated chunk index");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void single_event_only(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    ChunkPos indexedChunk = new ChunkPos(1200, 1200);
+    data.addGeneratedChunk(indexedChunk);
+    MeteorSchedulerService.SchedulerSettings settings = new MeteorSchedulerService.SchedulerSettings(1, 0, 0, 10);
+    RandomSource random = RandomSource.create(99L);
+
+    MeteorSchedulerService.TickResult firstTick = MeteorSchedulerService.tick(
+        level,
+        data,
+        settings,
+        random,
+        200L);
+    helper.assertTrue(firstTick.triggeredThisTick(), "Expected first eligible scheduler tick to trigger meteor");
+    helper.assertTrue(data.isTakeoverLocked(), "Expected takeover to be locked after first trigger");
+    BlockPos originalCorePos = data.getCorePos();
+    helper.assertTrue(originalCorePos != null, "Expected first trigger to persist selected core position");
+
+    data.setState(TakeoverLifecycleState.DORMANT);
+    data.setScheduledMeteorGameTime(-1L);
+    MeteorSchedulerService.TickResult secondTick = MeteorSchedulerService.tick(
+        level,
+        data,
+        settings,
+        random,
+        500L);
+    helper.assertTrue(!secondTick.armedThisTick(), "Expected locked takeover not to arm a second time");
+    helper.assertTrue(!secondTick.triggeredThisTick(), "Expected locked takeover not to trigger a second meteor");
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.DORMANT, "Expected lifecycle to stay DORMANT after lock");
+    helper.assertTrue(
+        originalCorePos.equals(data.getCorePos()),
+        "Expected first meteor landing position to remain unchanged after attempted re-trigger");
     helper.succeed();
   }
 

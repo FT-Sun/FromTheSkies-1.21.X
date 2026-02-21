@@ -220,6 +220,22 @@ public class TakeoverSavedData extends SavedData {
         setChunkCount(this.infectedSurfaceCountsByChunk, chunkPos, count);
     }
 
+    public void resetForTesting() {
+        this.state = TakeoverLifecycleState.DORMANT;
+        this.takeoverLocked = false;
+        this.armedAtGameTime = -1L;
+        this.scheduledMeteorGameTime = -1L;
+        this.schedulerRetryTicksRemaining = 0;
+        this.lastSpreadTickGameTime = -1L;
+        this.corePos = null;
+        this.generatedChunkLongs.clear();
+        this.infectedSurfaceBlockLongs.clear();
+        this.convertedChunkLongs.clear();
+        this.eligibleSurfaceCountsByChunk.clear();
+        this.infectedSurfaceCountsByChunk.clear();
+        this.setDirty();
+    }
+
     private void setChunkCount(Map<Long, Integer> map, ChunkPos chunkPos, int count) {
         long chunkLong = chunkPos.toLong();
         if (count <= 0) {
