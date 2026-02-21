@@ -6,10 +6,14 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 
 import net.jaftsun.fromtheskies.Config;
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
@@ -110,6 +114,75 @@ public final class TakeoverRegistryGameTests {
     helper.assertTrue(
         Config.TAKEOVER_METEOR_MAX_TICKS.get() >= Config.TAKEOVER_METEOR_MIN_TICKS.get(),
         "Expected takeover.meteorMaxTicks to be greater than or equal to takeover.meteorMinTicks");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void persistence_resume_state(GameTestHelper helper) {
+    TakeoverSavedData original = new TakeoverSavedData();
+    original.setState(TakeoverLifecycleState.ACTIVE);
+    original.setTakeoverLocked(true);
+    original.setArmedAtGameTime(1234L);
+    original.setScheduledMeteorGameTime(5678L);
+    original.setSchedulerRetryTicksRemaining(90);
+    original.setLastSpreadTickGameTime(9012L);
+    original.setCorePos(new BlockPos(10, 80, -12));
+    original.addGeneratedChunk(new ChunkPos(3, 4));
+    original.addGeneratedChunk(new ChunkPos(-2, 7));
+    original.addInfectedSurfaceBlock(new BlockPos(10, 81, -12));
+    original.addInfectedSurfaceBlock(new BlockPos(11, 81, -12));
+    original.setEligibleSurfaceCount(new ChunkPos(3, 4), 30);
+    original.setInfectedSurfaceCount(new ChunkPos(3, 4), 11);
+    original.addConvertedChunk(new ChunkPos(3, 4));
+    original.addConvertedChunk(new ChunkPos(-2, 7));
+
+    CompoundTag serialized = original.save(new CompoundTag(), helper.getLevel().registryAccess());
+    TakeoverSavedData loaded = TakeoverSavedData.load(serialized, helper.getLevel().registryAccess());
+
+    helper.assertTrue(loaded.getState() == TakeoverLifecycleState.ACTIVE, "Expected state to persist");
+    helper.assertTrue(loaded.isTakeoverLocked(), "Expected one-time lock flag to persist");
+    helper.assertTrue(loaded.getArmedAtGameTime() == 1234L, "Expected armedAtGameTime to persist");
+    helper.assertTrue(loaded.getScheduledMeteorGameTime() == 5678L, "Expected scheduledMeteorGameTime to persist");
+    helper.assertTrue(loaded.getSchedulerRetryTicksRemaining() == 90, "Expected schedulerRetryTicksRemaining to persist");
+    helper.assertTrue(loaded.getLastSpreadTickGameTime() == 9012L, "Expected lastSpreadTickGameTime to persist");
+
+    helper.assertTrue(loaded.getCorePos() != null, "Expected core position to persist");
+    helper.assertTrue(
+        loaded.getCorePos() != null && loaded.getCorePos().equals(new BlockPos(10, 80, -12)),
+        "Expected core position value to persist");
+
+    helper.assertTrue(loaded.getGeneratedChunks().size() == 2, "Expected generated chunk index size to persist");
+    helper.assertTrue(
+        loaded.getGeneratedChunks().contains(new ChunkPos(3, 4)),
+        "Expected generated chunk (3,4) to persist");
+    helper.assertTrue(
+        loaded.getGeneratedChunks().contains(new ChunkPos(-2, 7)),
+        "Expected generated chunk (-2,7) to persist");
+
+    helper.assertTrue(
+        loaded.getInfectedSurfaceBlocks().size() == 2,
+        "Expected infected surface tracking set to persist");
+    helper.assertTrue(
+        loaded.getInfectedSurfaceBlocks().contains(new BlockPos(10, 81, -12)),
+        "Expected infected surface position (10,81,-12) to persist");
+    helper.assertTrue(
+        loaded.getInfectedSurfaceBlocks().contains(new BlockPos(11, 81, -12)),
+        "Expected infected surface position (11,81,-12) to persist");
+
+    helper.assertTrue(
+        loaded.getEligibleSurfaceCount(new ChunkPos(3, 4)) == 30,
+        "Expected eligible surface count to persist");
+    helper.assertTrue(
+        loaded.getInfectedSurfaceCount(new ChunkPos(3, 4)) == 11,
+        "Expected infected surface count to persist");
+
+    helper.assertTrue(loaded.getConvertedChunks().size() == 2, "Expected converted chunk set size to persist");
+    helper.assertTrue(
+        loaded.getConvertedChunks().contains(new ChunkPos(3, 4)),
+        "Expected converted chunk (3,4) to persist");
+    helper.assertTrue(
+        loaded.getConvertedChunks().contains(new ChunkPos(-2, 7)),
+        "Expected converted chunk (-2,7) to persist");
     helper.succeed();
   }
 
