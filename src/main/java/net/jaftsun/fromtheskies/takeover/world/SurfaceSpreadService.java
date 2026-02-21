@@ -113,9 +113,14 @@ public final class SurfaceSpreadService {
         if (target == null || data.hasInfectedSurfaceBlock(target)) {
             return false;
         }
-        data.addInfectedSurfaceBlock(target);
         ChunkPos sourceChunk = new ChunkPos(source);
         ChunkPos targetChunk = new ChunkPos(target);
+        if (!data.hasGeneratedChunk(targetChunk)) {
+            data.addBlockedFrontierEdge(sourceChunk, targetChunk);
+            return false;
+        }
+
+        data.addInfectedSurfaceBlock(target);
         recalculateChunkSurface(level, data, sourceChunk);
         BiomeConversionService.applyChunkThresholdCheck(level, data, sourceChunk, Config.TAKEOVER_CHUNK_BIOME_FLIP_THRESHOLD.get());
         if (!targetChunk.equals(sourceChunk)) {

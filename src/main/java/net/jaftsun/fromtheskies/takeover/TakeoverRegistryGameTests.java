@@ -424,6 +424,9 @@ public final class TakeoverRegistryGameTests {
     level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
     level.setBlock(adjacent, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
     level.setBlock(farther, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    data.addGeneratedChunk(new ChunkPos(source));
+    data.addGeneratedChunk(new ChunkPos(adjacent));
+    data.addGeneratedChunk(new ChunkPos(farther));
 
     data.addInfectedSurfaceBlock(source);
     boolean firstSpread = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
@@ -448,11 +451,44 @@ public final class TakeoverRegistryGameTests {
     BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
     level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
     level.setBlock(target, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    data.addGeneratedChunk(new ChunkPos(source));
+    data.addGeneratedChunk(new ChunkPos(target));
 
     data.addInfectedSurfaceBlock(source);
     boolean spread = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
     helper.assertTrue(spread, "Expected spread to occur without any light-level gating");
     helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected low block-light target to become infected");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void generated_boundary_freeze(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+    data.setState(TakeoverLifecycleState.ACTIVE);
+
+    BlockPos source = new BlockPos(15, 80, 0);
+    BlockPos target = new BlockPos(16, 80, 0);
+    level.setBlock(source, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+    level.setBlock(target, Blocks.MOSS_BLOCK.defaultBlockState(), 3);
+
+    ChunkPos sourceChunk = new ChunkPos(source);
+    ChunkPos targetChunk = new ChunkPos(target);
+    data.addGeneratedChunk(sourceChunk);
+    data.addInfectedSurfaceBlock(source);
+
+    boolean blocked = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
+    helper.assertTrue(!blocked, "Expected spread to be rejected when adjacent chunk is not generated-indexed");
+    helper.assertTrue(!data.hasInfectedSurfaceBlock(target), "Expected blocked frontier target to remain uninfected");
+    helper.assertTrue(
+        data.hasBlockedFrontierEdge(sourceChunk, targetChunk),
+        "Expected blocked frontier edge to be tracked for debugging visibility");
+
+    data.addGeneratedChunk(targetChunk);
+    boolean resumed = SurfaceSpreadService.spreadFromSourceForTesting(level, data, source, 1, 0, true);
+    helper.assertTrue(resumed, "Expected spread to continue after adjacent chunk is indexed");
+    helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected indexed frontier target to become infected");
     helper.succeed();
   }
 

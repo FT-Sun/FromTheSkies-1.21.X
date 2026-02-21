@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -37,6 +38,7 @@ public class TakeoverSavedData extends SavedData {
     private static final String INFECTED_SURFACE_COUNTS_KEY = "infectedSurfaceCounts";
     private static final String CHUNK_KEY = "chunk";
     private static final String COUNT_KEY = "count";
+    private static final String BLOCKED_FRONTIER_EDGES_KEY = "blockedFrontierEdges";
 
     private TakeoverLifecycleState state = TakeoverLifecycleState.DORMANT;
     private boolean takeoverLocked;
@@ -51,6 +53,7 @@ public class TakeoverSavedData extends SavedData {
     private final Set<Long> convertedChunkLongs = new HashSet<>();
     private final Map<Long, Integer> eligibleSurfaceCountsByChunk = new HashMap<>();
     private final Map<Long, Integer> infectedSurfaceCountsByChunk = new HashMap<>();
+    private final Set<String> blockedFrontierEdges = new HashSet<>();
 
     public static TakeoverSavedData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
@@ -74,6 +77,7 @@ public class TakeoverSavedData extends SavedData {
         loadLongSet(tag, CONVERTED_CHUNKS_KEY, data.convertedChunkLongs);
         loadCountMap(tag, ELIGIBLE_SURFACE_COUNTS_KEY, data.eligibleSurfaceCountsByChunk);
         loadCountMap(tag, INFECTED_SURFACE_COUNTS_KEY, data.infectedSurfaceCountsByChunk);
+        loadStringSet(tag, BLOCKED_FRONTIER_EDGES_KEY, data.blockedFrontierEdges);
         data.setDirty(false);
         return data;
     }
@@ -95,6 +99,7 @@ public class TakeoverSavedData extends SavedData {
         tag.putLongArray(CONVERTED_CHUNKS_KEY, toLongArray(this.convertedChunkLongs));
         tag.put(ELIGIBLE_SURFACE_COUNTS_KEY, writeCountMap(this.eligibleSurfaceCountsByChunk));
         tag.put(INFECTED_SURFACE_COUNTS_KEY, writeCountMap(this.infectedSurfaceCountsByChunk));
+        tag.put(BLOCKED_FRONTIER_EDGES_KEY, writeStringSet(this.blockedFrontierEdges));
         return tag;
     }
 
@@ -220,6 +225,21 @@ public class TakeoverSavedData extends SavedData {
         return this.convertedChunkLongs.size();
     }
 
+    public void addBlockedFrontierEdge(ChunkPos sourceChunk, ChunkPos targetChunk) {
+        String edgeKey = toFrontierEdgeKey(sourceChunk, targetChunk);
+        if (this.blockedFrontierEdges.add(edgeKey)) {
+            this.setDirty();
+        }
+    }
+
+    public boolean hasBlockedFrontierEdge(ChunkPos sourceChunk, ChunkPos targetChunk) {
+        return this.blockedFrontierEdges.contains(toFrontierEdgeKey(sourceChunk, targetChunk));
+    }
+
+    public int getBlockedFrontierEdgeCount() {
+        return this.blockedFrontierEdges.size();
+    }
+
     public int getEligibleSurfaceCount(ChunkPos chunkPos) {
         return this.eligibleSurfaceCountsByChunk.getOrDefault(chunkPos.toLong(), 0);
     }
@@ -249,6 +269,7 @@ public class TakeoverSavedData extends SavedData {
         this.convertedChunkLongs.clear();
         this.eligibleSurfaceCountsByChunk.clear();
         this.infectedSurfaceCountsByChunk.clear();
+        this.blockedFrontierEdges.clear();
         this.setDirty();
     }
 
@@ -302,6 +323,27 @@ public class TakeoverSavedData extends SavedData {
                 }
             }
         }
+    }
+
+    private static ListTag writeStringSet(Set<String> source) {
+        ListTag listTag = new ListTag();
+        for (String value : source) {
+            listTag.add(StringTag.valueOf(value));
+        }
+        return listTag;
+    }
+
+    private static void loadStringSet(CompoundTag tag, String key, Set<String> target) {
+        ListTag values = tag.getList(key, Tag.TAG_STRING);
+        for (Tag value : values) {
+            if (value instanceof StringTag stringTag) {
+                target.add(stringTag.getAsString());
+            }
+        }
+    }
+
+    private static String toFrontierEdgeKey(ChunkPos sourceChunk, ChunkPos targetChunk) {
+        return sourceChunk.toLong() + "->" + targetChunk.toLong();
     }
 
     private static TakeoverLifecycleState parseState(String savedState) {
