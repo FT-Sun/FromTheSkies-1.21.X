@@ -6,9 +6,12 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 
 import net.jaftsun.fromtheskies.Config;
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.registry.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
 import net.jaftsun.fromtheskies.takeover.world.MeteorSchedulerService;
+import net.jaftsun.fromtheskies.takeover.world.SurfaceSpreadService;
+import net.jaftsun.fromtheskies.takeover.world.TakeoverCoreService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -334,6 +337,44 @@ public final class TakeoverRegistryGameTests {
     helper.assertTrue(
         originalCorePos.equals(data.getCorePos()),
         "Expected first meteor landing position to remain unchanged after attempted re-trigger");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void core_destroy_stops_spread(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+    data.setState(TakeoverLifecycleState.ACTIVE);
+    data.setCorePos(new BlockPos(5, 2, 5));
+
+    TakeoverCoreService.placeCoreIfNeeded(level, data);
+    helper.assertTrue(
+        level.getBlockState(data.getCorePos()).is(ModBlocks.ALIEN_CORE.get()),
+        "Expected alien_core block to be placed at scheduled landing position");
+
+    SurfaceSpreadService.tick(
+        level,
+        data,
+        1,
+        1,
+        RandomSource.create(4L),
+        300L);
+    helper.assertTrue(data.getLastSpreadTickGameTime() == 300L, "Expected spread loop to advance while ACTIVE");
+
+    TakeoverCoreService.onCoreBroken(level, data, data.getCorePos());
+    helper.assertTrue(data.getState() == TakeoverLifecycleState.STOPPED, "Expected core break to set lifecycle state to STOPPED");
+
+    SurfaceSpreadService.tick(
+        level,
+        data,
+        1,
+        1,
+        RandomSource.create(5L),
+        301L);
+    helper.assertTrue(
+        data.getLastSpreadTickGameTime() == 300L,
+        "Expected spread loop to halt immediately after core is destroyed");
     helper.succeed();
   }
 
