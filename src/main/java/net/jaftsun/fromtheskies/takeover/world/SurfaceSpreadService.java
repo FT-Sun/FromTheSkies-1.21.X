@@ -124,6 +124,9 @@ public final class SurfaceSpreadService {
             int offsetX,
             int offsetZ,
             boolean requireSourceInfected) {
+        if (data.getState() != TakeoverLifecycleState.ACTIVE) {
+            return false;
+        }
         if (requireSourceInfected && !data.hasInfectedSurfaceBlock(source)) {
             return false;
         }
