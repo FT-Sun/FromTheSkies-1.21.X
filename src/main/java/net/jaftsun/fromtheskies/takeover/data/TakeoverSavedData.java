@@ -170,6 +170,14 @@ public class TakeoverSavedData extends SavedData {
         return unpackChunkSet(this.generatedChunkLongs);
     }
 
+    public int getGeneratedChunkCount() {
+        return this.generatedChunkLongs.size();
+    }
+
+    public boolean hasGeneratedChunk(ChunkPos chunkPos) {
+        return this.generatedChunkLongs.contains(chunkPos.toLong());
+    }
+
     public void addGeneratedChunk(ChunkPos chunkPos) {
         if (this.generatedChunkLongs.add(chunkPos.toLong())) {
             this.setDirty();

@@ -7,6 +7,7 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import net.jaftsun.fromtheskies.Config;
 import net.jaftsun.fromtheskies.FromTheSkies;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
+import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -14,6 +15,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
@@ -184,6 +187,64 @@ public final class TakeoverRegistryGameTests {
         loaded.getConvertedChunks().contains(new ChunkPos(-2, 7)),
         "Expected converted chunk (-2,7) to persist");
     helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void generated_index_updates_overworld_only(GameTestHelper helper) {
+    ServerLevel overworld = helper.getLevel();
+    ServerLevel nether = overworld.getServer().getLevel(Level.NETHER);
+    ServerLevel end = overworld.getServer().getLevel(Level.END);
+    helper.assertTrue(nether != null, "Expected Nether level to exist during GameTest");
+    helper.assertTrue(end != null, "Expected End level to exist during GameTest");
+
+    TakeoverSavedData overworldData = TakeoverSavedData.get(overworld);
+    TakeoverSavedData netherData = TakeoverSavedData.get(nether);
+    TakeoverSavedData endData = TakeoverSavedData.get(end);
+
+    int overworldBefore = overworldData.getGeneratedChunkCount();
+    int netherBefore = netherData.getGeneratedChunkCount();
+    int endBefore = endData.getGeneratedChunkCount();
+    ChunkPos overworldChunk = nextUnindexedChunk(overworldData, 900_000, 900_000);
+    ChunkPos netherChunk = nextUnindexedChunk(netherData, 910_000, 910_000);
+    ChunkPos endChunk = nextUnindexedChunk(endData, 920_000, 920_000);
+
+    boolean overworldIndexed = GeneratedChunkIndexService.recordGeneratedChunkOnLoad(overworld, overworldChunk);
+    boolean netherIndexed = GeneratedChunkIndexService.recordGeneratedChunkOnLoad(nether, netherChunk);
+    boolean endIndexed = GeneratedChunkIndexService.recordGeneratedChunkOnLoad(end, endChunk);
+
+    helper.assertTrue(overworldIndexed, "Expected Overworld chunk load to be indexed");
+    helper.assertTrue(!netherIndexed, "Expected Nether chunk load to be ignored");
+    helper.assertTrue(!endIndexed, "Expected End chunk load to be ignored");
+
+    helper.assertTrue(
+        overworldData.getGeneratedChunkCount() == overworldBefore + 1,
+        "Expected Overworld generated chunk index to grow by one");
+    helper.assertTrue(
+        overworldData.hasGeneratedChunk(overworldChunk),
+        "Expected Overworld generated chunk index to contain recorded chunk");
+    helper.assertTrue(
+        !overworldData.hasGeneratedChunk(netherChunk),
+        "Expected Nether chunk to not appear in Overworld index");
+    helper.assertTrue(
+        !overworldData.hasGeneratedChunk(endChunk),
+        "Expected End chunk to not appear in Overworld index");
+    helper.assertTrue(
+        netherData.getGeneratedChunkCount() == netherBefore,
+        "Expected Nether generated chunk index to remain unchanged");
+    helper.assertTrue(
+        endData.getGeneratedChunkCount() == endBefore,
+        "Expected End generated chunk index to remain unchanged");
+    helper.succeed();
+  }
+
+  private static ChunkPos nextUnindexedChunk(TakeoverSavedData data, int startX, int startZ) {
+    for (int offset = 0; offset < 4096; offset++) {
+      ChunkPos candidate = new ChunkPos(startX + offset, startZ + offset);
+      if (!data.hasGeneratedChunk(candidate)) {
+        return candidate;
+      }
+    }
+    throw new IllegalStateException("Could not find an unindexed chunk candidate for GameTest");
   }
 
   private static boolean hasTakeoverPath(UnmodifiableConfig config, String key) {

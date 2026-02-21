@@ -6,6 +6,7 @@ import com.mojang.logging.LogUtils;
 
 import net.jaftsun.fromtheskies.registry.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.TakeoverRegistryGameTests;
+import net.jaftsun.fromtheskies.takeover.event.TakeoverServerEvents;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -43,9 +44,9 @@ public class FromTheSkies {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
-    private void commonSetup(FMLCommonSetupEvent event) {
-
-        }
+  private void commonSetup(FMLCommonSetupEvent event) {
+    event.enqueueWork(TakeoverServerEvents::register);
+  }
 
   private void addCreative(BuildCreativeModeTabContentsEvent event) {
     if (event.getTabKey().equals(CreativeModeTabs.BUILDING_BLOCKS)) {
