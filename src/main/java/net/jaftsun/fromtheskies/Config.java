@@ -6,9 +6,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+/**
+ * Common takeover config shared by runtime services and GameTests.
+ */
 public final class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
+    // Keep these defaults aligned with takeover config assertions in GameTests.
     public static final String DEFAULT_ALLOWED_DIMENSION = Level.OVERWORLD.location().toString();
     public static final boolean DEFAULT_TAKEOVER_ENABLED = true;
     public static final int DEFAULT_MIN_GENERATED_CHUNKS_SEEN = 512;

@@ -33,6 +33,7 @@ public final class TakeoverServerEvents {
         if (!(event.getLevel() instanceof ServerLevel level)) {
             return;
         }
+        // Chunk load events are the source of truth for the generated chunk index.
         GeneratedChunkIndexService.recordGeneratedChunkOnLoad(level, event.getChunk().getPos());
     }
 
@@ -40,6 +41,7 @@ public final class TakeoverServerEvents {
         if (!(event.getLevel() instanceof ServerLevel level)) {
             return;
         }
+        // Order matters: scheduling may activate takeover, core placement materializes it, spread advances it.
         MeteorSchedulerService.tick(level);
         TakeoverCoreService.placeCoreIfNeeded(level, net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData.get(level));
         SurfaceSpreadService.tick(level);

@@ -15,7 +15,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * Local adjacency spread engine plus chunk-level infection accounting.
+ */
 public final class SurfaceSpreadService {
+    // Preferred offsets used to seed first infection around the landed core.
     private static final int[][] INITIAL_SEED_OFFSETS = new int[][] {
             { 1, 0 },
             { -1, 0 },
@@ -48,6 +52,7 @@ public final class SurfaceSpreadService {
             int spreadAttemptsPerTick,
             RandomSource random,
             long gameTime) {
+        // Spread only runs while takeover is active.
         if (data.getState() != TakeoverLifecycleState.ACTIVE) {
             return 0;
         }
@@ -56,9 +61,12 @@ public final class SurfaceSpreadService {
             return 0;
         }
         data.setLastSpreadTickGameTime(gameTime);
+        // Ensure ACTIVE takeover has at least one infected seed near the core before random walk spread.
         seedInitialInfectionIfNeeded(level, data);
+        // Returns how many infection attempts actually succeeded this tick.
         int successfulSpreads = 0;
         for (int attempt = 0; attempt < Math.max(1, spreadAttemptsPerTick); attempt++) {
+            // Snapshot current infected set so each attempt picks a random existing source.
             List<BlockPos> infectedBlocks = new ArrayList<>(data.getInfectedSurfaceBlocks());
             if (infectedBlocks.isEmpty()) {
                 break;
@@ -124,12 +132,14 @@ public final class SurfaceSpreadService {
             int offsetX,
             int offsetZ,
             boolean requireSourceInfected) {
+        // Test/debug helper that mirrors production rules and returns true only for a real new infection.
         if (data.getState() != TakeoverLifecycleState.ACTIVE) {
             return false;
         }
         if (requireSourceInfected && !data.hasInfectedSurfaceBlock(source)) {
             return false;
         }
+        // Enforce grass-like cardinal adjacency; no diagonal or long-range jumps.
         if (Math.abs(offsetX) + Math.abs(offsetZ) != 1) {
             return false;
         }
@@ -139,6 +149,7 @@ public final class SurfaceSpreadService {
         }
         ChunkPos sourceChunk = new ChunkPos(source);
         ChunkPos targetChunk = new ChunkPos(target);
+        // Frontier attempts pause until neighboring chunk has been indexed as generated.
         if (!data.hasGeneratedChunk(targetChunk)) {
             data.addBlockedFrontierEdge(sourceChunk, targetChunk);
             return false;
@@ -155,6 +166,7 @@ public final class SurfaceSpreadService {
     private static BlockPos findTopEligibleSurface(ServerLevel level, int x, int z) {
         int minY = level.getMinBuildHeight();
         int maxY = level.getMaxBuildHeight() - 1;
+        // First non-air block from the top is the only candidate for that column.
         for (int y = maxY; y >= minY; y--) {
             BlockPos candidate = new BlockPos(x, y, z);
             BlockState state = level.getBlockState(candidate);
@@ -203,6 +215,7 @@ public final class SurfaceSpreadService {
         data.addInfectedSurfaceBlock(pos);
         applyVisualInfection(level, pos);
         ChunkPos chunkPos = new ChunkPos(pos);
+        // Recompute once if this chunk has no baseline counters yet; otherwise apply incremental update.
         if (data.getEligibleSurfaceCount(chunkPos) <= 0) {
             recalculateChunkSurface(level, data, chunkPos);
         } else {
@@ -214,6 +227,7 @@ public final class SurfaceSpreadService {
 
     private static void applyVisualInfection(ServerLevel level, BlockPos pos) {
         if (!level.getBlockState(pos).is(Blocks.SCULK)) {
+            // Flag 3 = notify neighbors (1) + send block update to clients (2).
             level.setBlock(pos, Blocks.SCULK.defaultBlockState(), 3);
         }
     }

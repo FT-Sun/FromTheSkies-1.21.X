@@ -18,6 +18,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.saveddata.SavedData;
 
+/**
+ * Persistent takeover runtime state for a single server level.
+ */
 public class TakeoverSavedData extends SavedData {
     public static final String DATA_NAME = "fromtheskies_takeover";
     public static final SavedData.Factory<TakeoverSavedData> FACTORY = new SavedData.Factory<>(
@@ -42,24 +45,30 @@ public class TakeoverSavedData extends SavedData {
 
     private TakeoverLifecycleState state = TakeoverLifecycleState.DORMANT;
     private boolean takeoverLocked;
+    // -1L is the "not scheduled/not set yet" sentinel for game-time based fields.
     private long armedAtGameTime = -1L;
     private long scheduledMeteorGameTime = -1L;
     private int schedulerRetryTicksRemaining;
     private long lastSpreadTickGameTime = -1L;
     private BlockPos corePos;
 
+    // Compact packed position/chunk collections for large, frequently-mutated sets.
     private final Set<Long> generatedChunkLongs = new HashSet<>();
     private final Set<Long> infectedSurfaceBlockLongs = new HashSet<>();
     private final Set<Long> convertedChunkLongs = new HashSet<>();
+    // Per-chunk counters used for conversion threshold checks.
     private final Map<Long, Integer> eligibleSurfaceCountsByChunk = new HashMap<>();
     private final Map<Long, Integer> infectedSurfaceCountsByChunk = new HashMap<>();
+    // Frontier attempts blocked by non-generated neighboring chunks.
     private final Set<String> blockedFrontierEdges = new HashSet<>();
 
     public static TakeoverSavedData get(ServerLevel level) {
+        // Canonical access point: load existing state or initialize a new one.
         return level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
     }
 
     public static TakeoverSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        // Read takeover state from NBT (Minecraft's typed binary save format).
         TakeoverSavedData data = new TakeoverSavedData();
         data.state = parseState(tag.getString(STATE_KEY));
         data.takeoverLocked = tag.getBoolean(TAKEOVER_LOCKED_KEY);
@@ -68,6 +77,7 @@ public class TakeoverSavedData extends SavedData {
         data.schedulerRetryTicksRemaining = tag.getInt(SCHEDULER_RETRY_TICKS_REMAINING_KEY);
         data.lastSpreadTickGameTime = tag.getLong(LAST_SPREAD_TICK_GAME_TIME_KEY);
 
+        // Tag.TAG_LONG guards type safety before reading packed BlockPos long payload.
         if (tag.contains(CORE_POS_KEY, Tag.TAG_LONG)) {
             data.corePos = BlockPos.of(tag.getLong(CORE_POS_KEY));
         }
@@ -84,6 +94,7 @@ public class TakeoverSavedData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        // Serialize current takeover state back into NBT for disk persistence.
         tag.putString(STATE_KEY, this.state.name());
         tag.putBoolean(TAKEOVER_LOCKED_KEY, this.takeoverLocked);
         tag.putLong(ARMED_AT_GAME_TIME_KEY, this.armedAtGameTime);
@@ -109,6 +120,7 @@ public class TakeoverSavedData extends SavedData {
 
     public void setState(TakeoverLifecycleState state) {
         this.state = Objects.requireNonNull(state, "state");
+        // SavedData dirty flag: mark as changed so Minecraft writes it on next save.
         this.setDirty();
     }
 
@@ -257,6 +269,7 @@ public class TakeoverSavedData extends SavedData {
     }
 
     public void resetForTesting() {
+        // GameTests use this to guarantee deterministic state between scenarios.
         this.state = TakeoverLifecycleState.DORMANT;
         this.takeoverLocked = false;
         this.armedAtGameTime = -1L;
@@ -275,6 +288,7 @@ public class TakeoverSavedData extends SavedData {
 
     private void setChunkCount(Map<Long, Integer> map, ChunkPos chunkPos, int count) {
         long chunkLong = chunkPos.toLong();
+        // Zero/negative values are represented as missing entries to keep serialization compact.
         if (count <= 0) {
             if (map.remove(chunkLong) != null) {
                 this.setDirty();
@@ -282,6 +296,7 @@ public class TakeoverSavedData extends SavedData {
             return;
         }
         Integer previous = map.put(chunkLong, count);
+        // Map.put returns the previous value (or null when absent) so we can avoid false dirty writes.
         if (previous == null || previous != count) {
             this.setDirty();
         }
@@ -314,9 +329,11 @@ public class TakeoverSavedData extends SavedData {
     }
 
     private static void loadCountMap(CompoundTag tag, String key, Map<Long, Integer> target) {
+        // countTag is one CompoundTag entry with shape { chunk: long, count: int }.
         ListTag counts = tag.getList(key, Tag.TAG_COMPOUND);
         for (Tag rawTag : counts) {
             if (rawTag instanceof CompoundTag countTag && countTag.contains(CHUNK_KEY, Tag.TAG_LONG)) {
+                // Clamp negatives to zero; only strictly positive counts are stored in memory.
                 int count = Math.max(0, countTag.getInt(COUNT_KEY));
                 if (count > 0) {
                     target.put(countTag.getLong(CHUNK_KEY), count);
@@ -343,10 +360,12 @@ public class TakeoverSavedData extends SavedData {
     }
 
     private static String toFrontierEdgeKey(ChunkPos sourceChunk, ChunkPos targetChunk) {
+        // Stable directional key keeps frontier diagnostics deterministic across save/load.
         return sourceChunk.toLong() + "->" + targetChunk.toLong();
     }
 
     private static TakeoverLifecycleState parseState(String savedState) {
+        // Defensive enum parsing: any missing/unknown value falls back to DORMANT.
         if (savedState == null || savedState.isBlank()) {
             return TakeoverLifecycleState.DORMANT;
         }

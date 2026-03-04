@@ -19,9 +19,12 @@ public final class TakeoverCommands {
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // Root admin command tree for inspecting and driving takeover state transitions.
         dispatcher.register(Commands.literal("fts")
+                // Permission level 2 means operators/command sources with admin-level access.
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("takeover")
+                        // ::status is a method reference shorthand for (ctx) -> status(ctx).
                         .then(Commands.literal("status").executes(TakeoverCommands::status))
                         .then(Commands.literal("force_arm").executes(context -> executeWithLevel(context, TakeoverCommands::forceArm)))
                         .then(Commands.literal("force_meteor")
@@ -65,6 +68,7 @@ public final class TakeoverCommands {
     }
 
     public static int stepSpread(ServerLevel level, TakeoverSavedData data, int ticks) {
+        // Simulate deterministic tick progression for command/debug usage.
         long start = Math.max(level.getGameTime(), data.getLastSpreadTickGameTime() + 1L);
         int totalSpreads = 0;
         for (int i = 0; i < ticks; i++) {
@@ -116,6 +120,7 @@ public final class TakeoverCommands {
     private static int executeWithLevel(
             CommandContext<CommandSourceStack> context,
             LevelCommandAction action) {
+        // Shared command wrapper: resolve level/data once and emit a uniform status line.
         CommandSourceStack source = context.getSource();
         if (!(source.getLevel() instanceof ServerLevel level)) {
             source.sendFailure(Component.literal("Takeover commands are server-level only."));
@@ -136,6 +141,7 @@ public final class TakeoverCommands {
 
     @FunctionalInterface
     private interface LevelCommandAction {
+        // Single-method callback interface so lambdas/method refs can be passed to executeWithLevel.
         int run(ServerLevel level, TakeoverSavedData data);
     }
 }

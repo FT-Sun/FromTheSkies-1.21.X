@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 
 public final class TakeoverBiomes {
+    // Registry key used by conversion logic and validation tests.
     public static final ResourceKey<Biome> ALIEN_OVERGROWTH = ResourceKey.create(
             Registries.BIOME,
             ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "alien_overgrowth"));

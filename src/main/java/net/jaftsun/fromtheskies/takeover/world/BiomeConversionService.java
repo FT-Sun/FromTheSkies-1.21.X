@@ -6,6 +6,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.ChunkPos;
 
+/**
+ * Chunk-level biome conversion gate keyed off infected/eligible surface ratios.
+ */
 public final class BiomeConversionService {
     private BiomeConversionService() {
     }

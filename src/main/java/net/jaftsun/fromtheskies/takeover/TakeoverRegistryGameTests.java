@@ -34,6 +34,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(FromTheSkies.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class TakeoverRegistryGameTests {
+  // Keep in sync with keys declared in Config.
   private static final List<String> TAKEOVER_CONFIG_KEYS = List.of(
       "enabled",
       "minGeneratedChunksSeen",
@@ -130,6 +131,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void persistence_resume_state(GameTestHelper helper) {
+    // Save/load parity test for every persisted takeover field.
     TakeoverSavedData original = new TakeoverSavedData();
     original.setState(TakeoverLifecycleState.ACTIVE);
     original.setTakeoverLocked(true);
@@ -199,6 +201,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void generated_index_updates_overworld_only(GameTestHelper helper) {
+    // v1 scope guard: generated chunk indexing must ignore Nether and End.
     ServerLevel overworld = helper.getLevel();
     ServerLevel nether = overworld.getServer().getLevel(Level.NETHER);
     ServerLevel end = overworld.getServer().getLevel(Level.END);
@@ -247,6 +250,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void scheduler_waits_for_threshold(GameTestHelper helper) {
+    // Scheduler should remain dormant until enough generated chunks are observed.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -306,6 +310,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void single_event_only(GameTestHelper helper) {
+    // Locked takeover should not arm or trigger a second meteor event.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -345,6 +350,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void core_destroy_stops_spread(GameTestHelper helper) {
+    // Core destruction is the hard stop for future spread ticks.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -383,6 +389,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void surface_infection_counts_correct(GameTestHelper helper) {
+    // Chunk-level counters must track eligible and infected surfaces independently.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -415,6 +422,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void active_core_seeds_initial_infection(GameTestHelper helper) {
+    // First active spread tick seeds infection near the placed core.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -478,6 +486,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void grass_like_local_spread(GameTestHelper helper) {
+    // Spread model is local adjacency, not long-distance jumps.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -528,6 +537,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void generated_boundary_freeze(GameTestHelper helper) {
+    // Frontier spread blocks until neighboring chunk has been indexed as generated.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -592,6 +602,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void no_rollback_after_stop(GameTestHelper helper) {
+    // STOPPED halts new spread but must not roll back prior conversion progress.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -626,6 +637,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void debug_commands_transition_state(GameTestHelper helper) {
+    // Command handlers are validated directly to ensure deterministic admin controls.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -658,6 +670,7 @@ public final class TakeoverRegistryGameTests {
 
   @GameTest(template = "empty")
   public static void chunk_threshold_biome_flip(GameTestHelper helper) {
+    // Conversion is threshold-driven and idempotent after first success.
     ServerLevel level = helper.getLevel();
     TakeoverSavedData data = TakeoverSavedData.get(level);
     data.resetForTesting();
@@ -681,6 +694,7 @@ public final class TakeoverRegistryGameTests {
   }
 
   private static ChunkPos nextUnindexedChunk(TakeoverSavedData data, int startX, int startZ) {
+    // Walk forward from a large offset to avoid clashes with preloaded test chunks.
     for (int offset = 0; offset < 4096; offset++) {
       ChunkPos candidate = new ChunkPos(startX + offset, startZ + offset);
       if (!data.hasGeneratedChunk(candidate)) {

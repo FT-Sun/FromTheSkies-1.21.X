@@ -7,12 +7,14 @@ import net.jaftsun.fromtheskies.Config;
 import net.jaftsun.fromtheskies.takeover.TakeoverLifecycleState;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 
+/**
+ * Advances takeover from dormant -> armed -> active based on generated chunk history and timing.
+ */
 public final class MeteorSchedulerService {
     private MeteorSchedulerService() {
     }
@@ -30,11 +32,13 @@ public final class MeteorSchedulerService {
             SchedulerSettings settings,
             RandomSource random,
             long gameTime) {
+        // Lock is a one-time gate that prevents repeat meteor scheduling.
         if (data.isTakeoverLocked()) {
             return TickResult.NONE;
         }
 
         boolean armedThisTick = false;
+        // Arming is deferred until the generated chunk index reaches configured threshold.
         if (data.getState() == TakeoverLifecycleState.DORMANT) {
             if (data.getGeneratedChunkCount() < settings.minGeneratedChunksSeen()) {
                 return TickResult.NONE;
@@ -54,6 +58,7 @@ public final class MeteorSchedulerService {
             return armedThisTick ? new TickResult(true, false, null) : TickResult.NONE;
         }
 
+        // Pick a landing chunk strictly from already-generated territory.
         ChunkPos targetChunk = pickMeteorTarget(data, random);
         if (targetChunk == null) {
             data.setSchedulerRetryTicksRemaining(settings.retryTicks());
@@ -110,10 +115,12 @@ public final class MeteorSchedulerService {
     }
 
     public record TickResult(boolean armedThisTick, boolean triggeredThisTick, ChunkPos targetChunk) {
+        // Java record: immutable data carrier used as structured scheduler output.
         public static final TickResult NONE = new TickResult(false, false, null);
     }
 
     public record SchedulerSettings(int minGeneratedChunksSeen, int meteorMinTicks, int meteorMaxTicks, int retryTicks) {
+        // Java record: immutable config snapshot validated once at construction.
         public SchedulerSettings {
             if (minGeneratedChunksSeen < 1) {
                 throw new IllegalArgumentException("minGeneratedChunksSeen must be >= 1");
