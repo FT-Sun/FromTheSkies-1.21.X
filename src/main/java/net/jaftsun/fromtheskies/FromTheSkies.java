@@ -1,5 +1,6 @@
 package net.jaftsun.fromtheskies;
 
+import net.jaftsun.fromtheskies.registry.ModItems;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -32,6 +33,7 @@ public class FromTheSkies {
   // pass them in automatically.
   public FromTheSkies(IEventBus modEventBus, ModContainer modContainer) {
     ModBlocks.register(modEventBus);
+    ModItems.register(modEventBus);
 
     // Register the commonSetup method for modloading
     modEventBus.addListener(this::commonSetup);
@@ -50,7 +52,7 @@ public class FromTheSkies {
 
   private void addCreative(BuildCreativeModeTabContentsEvent event) {
     if (event.getTabKey().equals(CreativeModeTabs.BUILDING_BLOCKS)) {
-      event.accept(ModBlocks.ALIEN_CORE_ITEM);
+      event.accept(ModBlocks.ALIEN_CORE);
     }
   }
 
