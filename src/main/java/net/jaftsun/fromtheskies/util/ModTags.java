@@ -11,6 +11,9 @@ import net.minecraft.world.level.block.Block;
 public class ModTags {
     // Make to add resources/data/block/tag_name.json file with things that should have that tag
     public static class Blocks {
+        public static final TagKey<Block> NEEDS_SAMPLE_TOOL = createTag("needs_sample_tool");
+        public static final TagKey<Block> INCORRECT_FOR_SAMPLE_TOOL = createTag("incorrect_for_sample_tool");
+
 
         private static TagKey<Block> createTag(String name) {
             return BlockTags.create(ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, name));

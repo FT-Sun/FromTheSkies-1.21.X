@@ -1,6 +1,13 @@
 {
   "block.fromtheskiesmcmod.alien_core": "Alien Core",
   "itemGroup.fromtheskiesmcmod": "From The Skies",
+  "item.fromtheskiesmcmod.sample_sword": "Sample Sword",
+  "item.fromtheskiesmcmod.sample_pickaxe": "Sample Pickaxe",
+  "item.fromtheskiesmcmod.sample_axe": "Sample Axe",
+  "item.fromtheskiesmcmod.sample_shovel": "Sample Shovel",
+  "item.fromtheskiesmcmod.sample_hoe": "Sample Hoe",
+  "creativetab.fromtheskiesmcmod.fromtheskies_tools": "From The Skies Tools",
+  "creativetab.fromtheskiesmcmod.fromtheskies_blocks": "From The Skies Blocks",
 
 
   "fromtheskies.configuration.title": "From The Skies Configs",

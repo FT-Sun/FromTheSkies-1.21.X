@@ -1,5 +1,6 @@
 package net.jaftsun.fromtheskies;
 
+import net.jaftsun.fromtheskies.item.ModCreativeModeTabs;
 import net.jaftsun.fromtheskies.registry.ModItems;
 import org.slf4j.Logger;
 
@@ -38,6 +39,8 @@ public class FromTheSkies {
     // Register the commonSetup method for modloading
     modEventBus.addListener(this::commonSetup);
 
+    ModCreativeModeTabs.register(modEventBus);
+
     // Register the item to a creative tab
     modEventBus.addListener(this::addCreative);
     modEventBus.addListener(FromTheSkies::registerGameTests);
@@ -53,6 +56,17 @@ public class FromTheSkies {
   private void addCreative(BuildCreativeModeTabContentsEvent event) {
     if (event.getTabKey().equals(CreativeModeTabs.BUILDING_BLOCKS)) {
       event.accept(ModBlocks.ALIEN_CORE);
+    }
+
+    if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
+        event.accept(ModItems.SAMPLE_PICKAXE);
+        event.accept(ModItems.SAMPLE_AXE);
+        event.accept(ModItems.SAMPLE_SHOVEL);
+        event.accept(ModItems.SAMPLE_HOE);
+    }
+
+    if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
+        event.accept(ModItems.SAMPLE_SWORD);
     }
   }
 

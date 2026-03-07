@@ -3,6 +3,7 @@ package net.jaftsun.fromtheskies.datagen;
 import com.jcraft.jorbis.Block;
 import net.jaftsun.fromtheskies.FromTheSkies;
 import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
@@ -24,5 +25,12 @@ public class ModBlockTagProvider extends BlockTagsProvider {
 
         tag(BlockTags.NEEDS_DIAMOND_TOOL)
                 .add(ModBlocks.ALIEN_CORE.get());
+
+        tag(ModTags.Blocks.NEEDS_SAMPLE_TOOL)
+                .addTag(BlockTags.NEEDS_DIAMOND_TOOL);
+
+        tag(ModTags.Blocks.INCORRECT_FOR_SAMPLE_TOOL)
+                .addTag(BlockTags.INCORRECT_FOR_DIAMOND_TOOL)
+                .remove(ModTags.Blocks.NEEDS_SAMPLE_TOOL);
     }
 }
