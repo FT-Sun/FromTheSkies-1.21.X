@@ -1,4 +1,9 @@
 {
   "block.fromtheskiesmcmod.alien_core": "Alien Core",
-  "itemGroup.fromtheskiesmcmod": "From The Skies"
+  "itemGroup.fromtheskiesmcmod": "From The Skies",
+
+
+  "fromtheskies.configuration.title": "From The Skies Configs",
+  "fromtheskies.configuration.section.fromtheskies.common.toml": "From The Skies Configs",
+  "fromtheskies.configuration.section.fromtheskies.common.toml.title": "From The Skies Configs"
 }
