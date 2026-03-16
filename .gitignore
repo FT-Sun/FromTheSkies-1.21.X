@@ -25,6 +25,9 @@ run-data
 
 repo
 
+# Build Artifacts
+.cache/
+
 # MacOS Finder Metadata
 .DS_Store
 ._.DS_Store
