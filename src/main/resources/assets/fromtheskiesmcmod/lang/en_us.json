@@ -10,9 +10,9 @@
   "item.fromtheskiesmcmod.sample_hoe": "Sample Hoe",
   "item.fromtheskiesmcmod.gecko_spawn_egg": "Gecko Spawn Egg",
 
-  "entity.mccourse.gecko": "Gecko",
+  "entity.fromtheskiesmcmod.gecko": "Gecko",
 
-  "fromtheskies.configuration.title": "From The Skies Configs",
-  "fromtheskies.configuration.section.fromtheskies.common.toml": "From The Skies Configs",
-  "fromtheskies.configuration.section.fromtheskies.common.toml.title": "From The Skies Configs"
+  "fromtheskiesmcmod.configuration.title": "From The Skies Configs",
+  "fromtheskiesmcmod.configuration.section.fromtheskies.common.toml": "From The Skies Configs",
+  "fromtheskiesmcmod.configuration.section.fromtheskies.common.toml.title": "From The Skies Configs"
 }

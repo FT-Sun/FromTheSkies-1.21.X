@@ -8,7 +8,6 @@ import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
@@ -31,10 +30,10 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(FromTheSkies.MOD_ID)
 public class FromTheSkies {
-    // Define mod id in a common place for everything to reference
-    public static final String MOD_ID = "fromtheskiesmcmod";
-    // Directly reference a slf4j logger
-    public static final Logger LOGGER = LogUtils.getLogger();
+  // Define mod id in a common place for everything to reference
+  public static final String MOD_ID = "fromtheskiesmcmod";
+  // Directly reference a slf4j logger
+  public static final Logger LOGGER = LogUtils.getLogger();
 
   // The constructor for the mod class is the first code that is run when your mod
   // is loaded.
@@ -54,9 +53,10 @@ public class FromTheSkies {
     modEventBus.addListener(this::addCreative);
     modEventBus.addListener(FromTheSkies::registerGameTests);
 
-        // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
-    }
+    // Register our mod's ModConfigSpec so that FML can create and load the config
+    // file for us
+    modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+  }
 
   private void commonSetup(FMLCommonSetupEvent event) {
     event.enqueueWork(TakeoverServerEvents::register);
@@ -68,30 +68,32 @@ public class FromTheSkies {
     }
 
     if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
-        event.accept(ModItems.SAMPLE_PICKAXE);
-        event.accept(ModItems.SAMPLE_AXE);
-        event.accept(ModItems.SAMPLE_SHOVEL);
-        event.accept(ModItems.SAMPLE_HOE);
+      event.accept(ModItems.SAMPLE_PICKAXE);
+      event.accept(ModItems.SAMPLE_AXE);
+      event.accept(ModItems.SAMPLE_SHOVEL);
+      event.accept(ModItems.SAMPLE_HOE);
     }
 
-    if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
-        event.accept(ModItems.SAMPLE_SWORD);
+    if (event.getTabKey().equals(CreativeModeTabs.COMBAT)) {
+      event.accept(ModItems.SAMPLE_SWORD);
     }
   }
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
+
+  // You can use SubscribeEvent and let the Event Bus discover methods to call
+  @SubscribeEvent
+  public void onServerStarting(ServerStartingEvent event) {
+
+  }
+
+  // You can use EventBusSubscriber to automatically register all static methods
+  // in the class annotated with @SubscribeEvent
+  @EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
+  public static class ClientModEvents {
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-
+    public static void onClientSetup(FMLClientSetupEvent event) {
+      EntityRenderers.register(ModEntities.GECKO.get(), GeckoRenderer::new);
     }
-
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-    @EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
-    public static class ClientModEvents {
-        @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event) {
-            EntityRenderers.register(ModEntities.GECKO.get(), GeckoRenderer::new);
-        }
-    }
+  }
 
   private static void registerGameTests(RegisterGameTestsEvent event) {
     event.register(TakeoverRegistryGameTests.class);

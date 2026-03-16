@@ -1,6 +1,5 @@
 package net.jaftsun.fromtheskies.datagen;
 
-import com.jcraft.jorbis.Block;
 import net.jaftsun.fromtheskies.FromTheSkies;
 import net.jaftsun.fromtheskies.registry.ModBlocks;
 import net.jaftsun.fromtheskies.util.ModTags;
@@ -14,23 +13,24 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 public class ModBlockTagProvider extends BlockTagsProvider {
-    public ModBlockTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
-        super(output, lookupProvider, FromTheSkies.MOD_ID, existingFileHelper);
-    }
+  public ModBlockTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider,
+      @Nullable ExistingFileHelper existingFileHelper) {
+    super(output, lookupProvider, FromTheSkies.MOD_ID, existingFileHelper);
+  }
 
-    @Override
-    protected void addTags(HolderLookup.Provider provider) {
-        tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                .add(ModBlocks.ALIEN_CORE.get());
+  @Override
+  protected void addTags(HolderLookup.Provider provider) {
+    tag(BlockTags.MINEABLE_WITH_PICKAXE)
+        .add(ModBlocks.ALIEN_CORE.get());
 
-        tag(BlockTags.NEEDS_DIAMOND_TOOL)
-                .add(ModBlocks.ALIEN_CORE.get());
+    tag(BlockTags.NEEDS_DIAMOND_TOOL)
+        .add(ModBlocks.ALIEN_CORE.get());
 
-        tag(ModTags.Blocks.NEEDS_SAMPLE_TOOL)
-                .addTag(BlockTags.NEEDS_DIAMOND_TOOL);
+    tag(ModTags.Blocks.NEEDS_SAMPLE_TOOL)
+        .addTag(BlockTags.NEEDS_DIAMOND_TOOL);
 
-        tag(ModTags.Blocks.INCORRECT_FOR_SAMPLE_TOOL)
-                .addTag(BlockTags.INCORRECT_FOR_DIAMOND_TOOL)
-                .remove(ModTags.Blocks.NEEDS_SAMPLE_TOOL);
-    }
+    tag(ModTags.Blocks.INCORRECT_FOR_SAMPLE_TOOL)
+        .addTag(BlockTags.INCORRECT_FOR_DIAMOND_TOOL)
+        .remove(ModTags.Blocks.NEEDS_SAMPLE_TOOL);
+  }
 }
