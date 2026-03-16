@@ -1,9 +1,11 @@
 package net.jaftsun.fromtheskies.registry;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.entity.ModEntities;
 import net.jaftsun.fromtheskies.item.ModToolTiers;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -12,6 +14,10 @@ public class ModItems {
 
 //    Sample Item
 //    public static final DeferredItem<Item> SAMPLE = ITEMS.register("sample", () -> new Item(new Item.Properties()));
+
+    public static final DeferredItem<Item> GECKO_SPAWN_EGG = ITEMS.register("gecko_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.GECKO, 0x31afaf, 0xffac00,
+            new Item.Properties()));
 
     public static final DeferredItem<SwordItem> SAMPLE_SWORD = ITEMS.register("sample_sword",
             () -> new SwordItem(ModToolTiers.SAMPLE, new Item.Properties()

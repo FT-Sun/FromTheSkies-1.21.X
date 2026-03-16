@@ -26,6 +26,8 @@ public class ModCreativeModeTabs {
                         output.accept(ModItems.SAMPLE_AXE.get());
                         output.accept(ModItems.SAMPLE_SHOVEL.get());
                         output.accept(ModItems.SAMPLE_HOE.get());
+
+                        output.accept(ModItems.GECKO_SPAWN_EGG.get());
                     }).build());
 
     public static final Supplier<CreativeModeTab> FROMTHESKIES_BLOCKS_TAB = CREATIVE_MODE_TAB.register("fromtheskies_blocks_tab",

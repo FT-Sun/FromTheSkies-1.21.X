@@ -23,6 +23,8 @@ public class ModItemModelProvider extends ItemModelProvider {
        handheldItem(ModItems.SAMPLE_AXE);
        handheldItem(ModItems.SAMPLE_SHOVEL);
        handheldItem(ModItems.SAMPLE_HOE);
+
+       withExistingParent(ModItems.GECKO_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
     }
 
     private ItemModelBuilder handheldItem(DeferredItem<?> item) {
