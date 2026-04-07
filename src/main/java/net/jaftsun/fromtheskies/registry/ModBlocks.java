@@ -30,10 +30,39 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> ALIEN_CORE = registerBlock("alien_core",
             () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_GREEN)
+                    .mapColor(MapColor.COLOR_PURPLE)
                     .strength(5.0F, 12.0F)
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.SCULK)));
+
+    public static final DeferredBlock<Block> BREEM_GRASS = registerBlock("breem_grass",
+            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_YELLOW)
+                    .strength(4.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.GRASS)));
+
+    public static final DeferredBlock<Block> BREEM_DIRT = registerBlock("breem_dirt",
+            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DIRT)
+                    .strength(4.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.GRAVEL)));
+
+    public static final DeferredBlock<Block> BREEM_LOG = registerBlock("breem_log",
+            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WOOD)
+                    .strength(5.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.WOOD)));
+
+    public static final DeferredBlock<Block> BREEM_LEAF = registerBlock("breem_leaf",
+            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_ORANGE)
+                    .strength(3.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.GRASS)));
+
 
     private ModBlocks() {
     }

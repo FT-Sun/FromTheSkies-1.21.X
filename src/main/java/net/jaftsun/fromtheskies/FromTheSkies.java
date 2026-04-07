@@ -1,6 +1,7 @@
 package net.jaftsun.fromtheskies;
 
 import net.jaftsun.fromtheskies.entity.ModEntities;
+import net.jaftsun.fromtheskies.entity.client.BreemRenderer;
 import net.jaftsun.fromtheskies.entity.client.GeckoRenderer;
 import net.jaftsun.fromtheskies.item.ModCreativeModeTabs;
 import net.jaftsun.fromtheskies.registry.ModItems;
@@ -26,6 +27,8 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
+import net.jaftsun.fromtheskies.entity.client.BreemModel;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(FromTheSkies.MOD_ID)
@@ -65,17 +68,14 @@ public class FromTheSkies {
   private void addCreative(BuildCreativeModeTabContentsEvent event) {
     if (event.getTabKey().equals(CreativeModeTabs.BUILDING_BLOCKS)) {
       event.accept(ModBlocks.ALIEN_CORE);
+      event.accept(ModBlocks.BREEM_GRASS);
+      event.accept(ModBlocks.BREEM_DIRT);
+      event.accept(ModBlocks.BREEM_LOG);
+      event.accept(ModBlocks.BREEM_LEAF);
     }
 
-    if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
-      event.accept(ModItems.SAMPLE_PICKAXE);
-      event.accept(ModItems.SAMPLE_AXE);
-      event.accept(ModItems.SAMPLE_SHOVEL);
-      event.accept(ModItems.SAMPLE_HOE);
-    }
-
-    if (event.getTabKey().equals(CreativeModeTabs.COMBAT)) {
-      event.accept(ModItems.SAMPLE_SWORD);
+    if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
+      event.accept(ModItems.BREEM_SPAWN_EGG);
     }
   }
 
@@ -87,11 +87,16 @@ public class FromTheSkies {
 
   // You can use EventBusSubscriber to automatically register all static methods
   // in the class annotated with @SubscribeEvent
-  @EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
+  @EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
   public static class ClientModEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-      EntityRenderers.register(ModEntities.GECKO.get(), GeckoRenderer::new);
+      EntityRenderers.register(ModEntities.BREEM.get(), BreemRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+      event.registerLayerDefinition(BreemModel.LAYER_LOCATION, BreemModel::createBodyLayer);
     }
   }
 
