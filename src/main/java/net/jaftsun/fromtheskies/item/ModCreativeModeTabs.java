@@ -18,10 +18,23 @@ public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, FromTheSkies.MOD_ID);
 
+    public static final Supplier<CreativeModeTab> FROMTHESKIES_TOOLS_TAB = CREATIVE_MODE_TABS.register("fromtheskies_tools_tab",
+            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.SAMPLE_SWORD.get()))
+                    .title(Component.translatable("creativetab.fromtheskiesmcmod.fromtheskies_tools"))
+                    .displayItems((itemDisplayParameters, output) -> {
+                        output.accept(ModItems.SAMPLE_SWORD.get());
+                        output.accept(ModItems.SAMPLE_PICKAXE.get());
+                        output.accept(ModItems.SAMPLE_AXE.get());
+                        output.accept(ModItems.SAMPLE_SHOVEL.get());
+                        output.accept(ModItems.SAMPLE_HOE.get());
+
+                    }).build());
+
     public static final Supplier<CreativeModeTab> FROMTHESKIES_BLOCKS_TAB =
             CREATIVE_MODE_TABS.register("fromtheskies_blocks_tab",
                     () -> CreativeModeTab.builder()
                             .icon(() -> new ItemStack(ModBlocks.ALIEN_CORE.get()))
+                            .withTabsBefore(ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "fromtheskies_tools_tab"))
                             .title(Component.translatable("creativetab.fromtheskiesmcmod.fromtheskies_blocks"))
                             .displayItems((parameters, output) -> {
                                 output.accept(ModBlocks.ALIEN_CORE.get());

@@ -6,6 +6,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -57,11 +58,14 @@ public final class ModBlocks {
                     .sound(SoundType.WOOD)));
 
     public static final DeferredBlock<Block> BREEM_LEAF = registerBlock("breem_leaf",
-            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+            () -> new LeavesBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_ORANGE)
-                    .strength(3.0F, 12.0F)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.GRASS)));
+                    .strength(0.2F)
+                    .noOcclusion()
+                    .sound(SoundType.GRASS)
+                    .isValidSpawn((state, level, pos, type) -> false)
+                    .isSuffocating((state, level, pos) -> false)
+                    .isViewBlocking((state, level, pos) -> false)));
 
 
     private ModBlocks() {

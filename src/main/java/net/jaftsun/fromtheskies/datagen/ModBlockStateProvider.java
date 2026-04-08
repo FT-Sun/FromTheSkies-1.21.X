@@ -16,7 +16,10 @@ public class ModBlockStateProvider extends BlockStateProvider {
     protected void registerStatesAndModels() {
 //        blockWithItem(ModBlocks.SAMPLE_BLOCK);
         simpleBlockWithItem(ModBlocks.ALIEN_CORE.get(), models().getExistingFile(modLoc("block/alien_core")));
-
+        simpleBlockWithItem(ModBlocks.BREEM_DIRT.get(), models().getExistingFile(modLoc("block/breem_dirt")));
+        simpleBlockWithItem(ModBlocks.BREEM_GRASS.get(), models().getExistingFile(modLoc("block/breem_grass")));
+        simpleBlockWithItem(ModBlocks.BREEM_LEAF.get(), models().getExistingFile(modLoc("block/breem_leaf")));
+        simpleBlockWithItem(ModBlocks.BREEM_LOG.get(), models().getExistingFile(modLoc("block/breem_log")));
     }
 
     private void blockWithItem(DeferredBlock<?> deferredBlock) {

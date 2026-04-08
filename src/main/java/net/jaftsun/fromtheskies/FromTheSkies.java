@@ -5,6 +5,8 @@ import net.jaftsun.fromtheskies.entity.client.BreemRenderer;
 import net.jaftsun.fromtheskies.entity.client.GeckoRenderer;
 import net.jaftsun.fromtheskies.item.ModCreativeModeTabs;
 import net.jaftsun.fromtheskies.registry.ModItems;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -74,6 +76,17 @@ public class FromTheSkies {
       event.accept(ModBlocks.BREEM_LEAF);
     }
 
+    if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
+      event.accept(ModItems.SAMPLE_PICKAXE);
+      event.accept(ModItems.SAMPLE_AXE);
+      event.accept(ModItems.SAMPLE_SHOVEL);
+      event.accept(ModItems.SAMPLE_HOE);
+    }
+
+    if (event.getTabKey().equals(CreativeModeTabs.COMBAT)) {
+      event.accept(ModItems.SAMPLE_SWORD);
+    }
+
     if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
       event.accept(ModItems.BREEM_SPAWN_EGG);
     }
@@ -87,11 +100,12 @@ public class FromTheSkies {
 
   // You can use EventBusSubscriber to automatically register all static methods
   // in the class annotated with @SubscribeEvent
-  @EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+  @EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
   public static class ClientModEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
       EntityRenderers.register(ModEntities.BREEM.get(), BreemRenderer::new);
+      ItemBlockRenderTypes.setRenderLayer(ModBlocks.BREEM_LEAF.get(), RenderType.cutout());
     }
 
     @SubscribeEvent
