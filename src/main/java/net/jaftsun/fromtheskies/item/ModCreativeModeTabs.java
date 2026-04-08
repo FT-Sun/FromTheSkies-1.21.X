@@ -14,32 +14,39 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.function.Supplier;
 
 public class ModCreativeModeTabs {
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TAB =
+
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, FromTheSkies.MOD_ID);
 
-    public static final Supplier<CreativeModeTab> FROMTHESKIES_TOOLS_TAB = CREATIVE_MODE_TAB.register("fromtheskies_tools_tab",
-            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.SAMPLE_SWORD.get()))
-                    .title(Component.translatable("creativetab.fromtheskiesmcmod.fromtheskies_tools"))
-                    .displayItems((itemDisplayParameters, output) -> {
-                        output.accept(ModItems.SAMPLE_SWORD.get());
-                        output.accept(ModItems.SAMPLE_PICKAXE.get());
-                        output.accept(ModItems.SAMPLE_AXE.get());
-                        output.accept(ModItems.SAMPLE_SHOVEL.get());
-                        output.accept(ModItems.SAMPLE_HOE.get());
+    public static final Supplier<CreativeModeTab> FROMTHESKIES_BLOCKS_TAB =
+            CREATIVE_MODE_TABS.register("fromtheskies_blocks_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModBlocks.ALIEN_CORE.get()))
+                            .title(Component.translatable("creativetab.fromtheskiesmcmod.fromtheskies_blocks"))
+                            .displayItems((parameters, output) -> {
+                                output.accept(ModBlocks.ALIEN_CORE.get());
+                                output.accept(ModBlocks.BREEM_GRASS.get());
+                                output.accept(ModBlocks.BREEM_DIRT.get());
+                                output.accept(ModBlocks.BREEM_LOG.get());
+                                output.accept(ModBlocks.BREEM_LEAF.get());
+                            })
+                            .build());
 
-                        output.accept(ModItems.GECKO_SPAWN_EGG.get());
-                    }).build());
-
-    public static final Supplier<CreativeModeTab> FROMTHESKIES_BLOCKS_TAB = CREATIVE_MODE_TAB.register("fromtheskies_blocks_tab",
-            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModBlocks.ALIEN_CORE.get()))
-                    .withTabsBefore(ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "fromtheskies_tools_tab"))
-                    .title(Component.translatable("creativetab.fromtheskiesmcmod.fromtheskies_blocks"))
-                    .displayItems((itemDisplayParameters, output) -> {
-                        output.accept(ModBlocks.ALIEN_CORE.get());
-                    }).build());
-
+    public static final Supplier<CreativeModeTab> FROMTHESKIES_ENTITIES_TAB =
+            CREATIVE_MODE_TABS.register("fromtheskies_entities_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.BREEM_VILLAGER_SPAWN_EGG.get()))
+                            .withTabsBefore(ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "fromtheskies_blocks_tab"))
+                            .title(Component.translatable("creativetab.fromtheskiesmcmod.fromtheskies_entities"))
+                            .displayItems((parameters, output) -> {
+                                output.accept(ModItems.BREEM_VILLAGER_SPAWN_EGG.get());
+                                output.accept(ModItems.BREEM_SOLDIER_SPAWN_EGG.get());
+                                output.accept(ModItems.BREEM_BRUTE_SPAWN_EGG.get());
+                                output.accept(ModItems.BREEM_SHAMAN_SPAWN_EGG.get());
+                            })
+                            .build());
 
     public static void register(IEventBus eventBus) {
-        CREATIVE_MODE_TAB.register(eventBus);
+        CREATIVE_MODE_TABS.register(eventBus);
     }
 }

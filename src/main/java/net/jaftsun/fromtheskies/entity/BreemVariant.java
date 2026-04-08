@@ -4,10 +4,11 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public enum BreemVariant {
-    VILLAGER(0),
-    SOLDIER(1),
-    BRUTE(2),
-    SHAMAN(3);
+    UNSET(0),
+    VILLAGER(1),
+    SOLDIER(2),
+    BRUTE(3),
+    SHAMAN(4);
 
     private static final BreemVariant[] BY_ID = Arrays.stream(values())
             .sorted(Comparator.comparingInt(BreemVariant::getId))

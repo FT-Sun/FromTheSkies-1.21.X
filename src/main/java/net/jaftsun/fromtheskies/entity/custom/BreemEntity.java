@@ -42,7 +42,7 @@ public class BreemEntity extends Piglin {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
-        builder.define(DATA_VARIANT_ID, 0);
+        builder.define(DATA_VARIANT_ID, BreemVariant.UNSET.getId());
     }
 
     public BreemVariant getVariant() {
@@ -114,7 +114,7 @@ public class BreemEntity extends Piglin {
                 stack.shrink(1);
             }
 
-            doSimpleDiamondBarter((ServerLevel) this.level(), player);
+            doSimpleDiamondBarter((ServerLevel) this.level());
 
             this.playSound(SoundEvents.PIGLIN_ADMIRING_ITEM, 1.0F, 1.0F);
             return InteractionResult.SUCCESS;
@@ -146,7 +146,7 @@ public class BreemEntity extends Piglin {
                 || player.getItemBySlot(EquipmentSlot.FEET).is(Items.DIAMOND_BOOTS);
     }
 
-    private void doSimpleDiamondBarter(ServerLevel level, Player player) {
+    private void doSimpleDiamondBarter(ServerLevel level) {
         int roll = level.random.nextInt(6);
 
         ItemStack reward = switch (roll) {
@@ -164,13 +164,16 @@ public class BreemEntity extends Piglin {
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType,
                                         @Nullable SpawnGroupData spawnGroupData) {
-        int pick = level.getRandom().nextInt(4);
 
-        switch (pick) {
-            case 0 -> this.setVariant(BreemVariant.VILLAGER);
-            case 1 -> this.setVariant(BreemVariant.SOLDIER);
-            case 2 -> this.setVariant(BreemVariant.BRUTE);
-            default -> this.setVariant(BreemVariant.SHAMAN);
+        if (this.getVariant() == BreemVariant.UNSET) {
+            int pick = level.getRandom().nextInt(4);
+
+            switch (pick) {
+                case 0 -> this.setVariant(BreemVariant.VILLAGER);
+                case 1 -> this.setVariant(BreemVariant.SOLDIER);
+                case 2 -> this.setVariant(BreemVariant.BRUTE);
+                default -> this.setVariant(BreemVariant.SHAMAN);
+            }
         }
 
         this.setImmuneToZombification(true);

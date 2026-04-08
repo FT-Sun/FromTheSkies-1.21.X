@@ -33,7 +33,13 @@ public class BreemRenderer extends MobRenderer<BreemEntity, BreemModel<BreemEnti
 
     @Override
     public ResourceLocation getTextureLocation(BreemEntity entity) {
-        return LOCATION_BY_VARIANT.get(entity.getVariant());
+        BreemVariant variant = entity.getVariant();
+
+        if (variant == BreemVariant.UNSET) {
+            variant = BreemVariant.VILLAGER;
+        }
+
+        return LOCATION_BY_VARIANT.get(variant);
     }
 
     @Override
