@@ -2,10 +2,10 @@ package net.jaftsun.fromtheskies.entity.client;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
 import net.jaftsun.fromtheskies.entity.BreemVariant;
-import net.jaftsun.fromtheskies.entity.animations.BreemBruteAnimation;
-import net.jaftsun.fromtheskies.entity.animations.BreemShamanAnimation;
-import net.jaftsun.fromtheskies.entity.animations.BreemSoldierAnimation;
-import net.jaftsun.fromtheskies.entity.animations.BreemVillagerAnimation;
+//import net.jaftsun.fromtheskies.entity.animations.BreemBruteAnimation;
+//import net.jaftsun.fromtheskies.entity.animations.BreemShamanAnimation;
+//import net.jaftsun.fromtheskies.entity.animations.BreemSoldierAnimation;
+//import net.jaftsun.fromtheskies.entity.animations.BreemVillagerAnimation;
 import net.jaftsun.fromtheskies.entity.custom.BreemEntity;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -83,27 +83,27 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
 
         BreemVariant variant = entity.getVariant();
 
-        switch (variant) {
-            case VILLAGER -> {
-                this.animateWalk(BreemVillagerAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-                this.animate(entity.idleAnimationState, BreemVillagerAnimation.Idle, ageInTicks, 1.0F);
-                this.animate(entity.attackAnimationState, BreemVillagerAnimation.Hitting, ageInTicks, 1.0F);
-            }
-            case SOLDIER -> {
-                this.animateWalk(BreemSoldierAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-                this.animate(entity.idleAnimationState, BreemSoldierAnimation.Idle, ageInTicks, 1.0F);
-                this.animate(entity.attackAnimationState, BreemSoldierAnimation.Hitting, ageInTicks, 1.0F);
-            }
-            case BRUTE -> {
-                this.animateWalk(BreemBruteAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-                this.animate(entity.idleAnimationState, BreemBruteAnimation.Idle, ageInTicks, 1.0F);
-                this.animate(entity.attackAnimationState, BreemBruteAnimation.Hitting, ageInTicks, 1.0F);
-            }
-            case SHAMAN -> {
-                this.animateWalk(BreemShamanAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-                this.animate(entity.idleAnimationState, BreemShamanAnimation.Idle, ageInTicks, 1.0F);
-                this.animate(entity.attackAnimationState, BreemShamanAnimation.SpellOrAttack, ageInTicks, 1.0F);
-            }
-        }
+//        switch (variant) {
+//            case VILLAGER -> {
+//                this.animateWalk(BreemVillagerAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
+//                this.animate(entity.idleAnimationState, BreemVillagerAnimation.Idle, ageInTicks, 1.0F);
+//                this.animate(entity.attackAnimationState, BreemVillagerAnimation.Hitting, ageInTicks, 1.0F);
+//            }
+//            case SOLDIER -> {
+//                this.animateWalk(BreemSoldierAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
+//                this.animate(entity.idleAnimationState, BreemSoldierAnimation.Idle, ageInTicks, 1.0F);
+//                this.animate(entity.attackAnimationState, BreemSoldierAnimation.Hitting, ageInTicks, 1.0F);
+//            }
+//            case BRUTE -> {
+//                this.animateWalk(BreemBruteAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
+//                this.animate(entity.idleAnimationState, BreemBruteAnimation.Idle, ageInTicks, 1.0F);
+//                this.animate(entity.attackAnimationState, BreemBruteAnimation.Hitting, ageInTicks, 1.0F);
+//            }
+//            case SHAMAN -> {
+//                this.animateWalk(BreemShamanAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
+//                this.animate(entity.idleAnimationState, BreemShamanAnimation.Idle, ageInTicks, 1.0F);
+//                this.animate(entity.attackAnimationState, BreemShamanAnimation.SpellOrAttack, ageInTicks, 1.0F);
+//            }
+//        }
     }
 }

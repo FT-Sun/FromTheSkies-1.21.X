@@ -90,10 +90,10 @@ public class BreemEntity extends Piglin {
         return false;
     }
 
-    @Override
-    protected boolean shouldZombify() {
-        return false;
-    }
+//    @Override
+//    protected boolean shouldZombify() {
+//        return false;
+//    }
 
     @Override
     public void setTarget(@Nullable LivingEntity target) {
@@ -158,7 +158,7 @@ public class BreemEntity extends Piglin {
             default -> new ItemStack(Items.SPECTRAL_ARROW, 8);
         };
 
-        this.spawnAtLocation(level, reward);
+        this.spawnAtLocation(reward);
     }
 
     @Override

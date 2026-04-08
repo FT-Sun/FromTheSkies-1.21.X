@@ -88,7 +88,10 @@ public class FromTheSkies {
     }
 
     if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
-      event.accept(ModItems.BREEM_SPAWN_EGG);
+      event.accept(ModItems.BREEM_VILLAGER_SPAWN_EGG);
+      event.accept(ModItems.BREEM_SOLDIER_SPAWN_EGG);
+      event.accept(ModItems.BREEM_BRUTE_SPAWN_EGG);
+      event.accept(ModItems.BREEM_SHAMAN_SPAWN_EGG);
     }
   }
 

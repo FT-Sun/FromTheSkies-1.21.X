@@ -19,7 +19,8 @@ public class BreemVariantSpawnEggItem extends SpawnEggItem {
     private final BreemVariant variant;
 
     public BreemVariantSpawnEggItem(EntityType<? extends BreemEntity> entityType, BreemVariant variant, Item.Properties properties) {
-        super(entityType, properties);
+        super(entityType, 0x31afaf, 0xffac00, properties);
+
         this.variant = variant;
     }
 
@@ -40,7 +41,8 @@ public class BreemVariantSpawnEggItem extends SpawnEggItem {
                 context.getItemInHand(),
                 player,
                 pos,
-                MobSpawnType.SPAWN_ITEM,
+//                MobSpawnType.SPAWN_ITEM,
+                MobSpawnType.SPAWN_EGG,
                 true,
                 context.getClickedFace() == Direction.UP
         );
