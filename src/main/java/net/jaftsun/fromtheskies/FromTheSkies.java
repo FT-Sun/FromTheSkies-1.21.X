@@ -19,7 +19,9 @@ import com.mojang.logging.LogUtils;
 import net.jaftsun.fromtheskies.registry.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.TakeoverRegistryGameTests;
 import net.jaftsun.fromtheskies.takeover.event.TakeoverServerEvents;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -27,6 +29,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.jaftsun.fromtheskies.entity.client.BreemModel;
@@ -57,6 +60,7 @@ public class FromTheSkies {
     // Register the item to a creative tab
     modEventBus.addListener(this::addCreative);
     modEventBus.addListener(FromTheSkies::registerGameTests);
+    modEventBus.addListener(ClientModEvents::registerItemColors);
 
     // Register our mod's ModConfigSpec so that FML can create and load the config
     // file for us
@@ -114,6 +118,14 @@ public class FromTheSkies {
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
       event.registerLayerDefinition(BreemModel.LAYER_LOCATION, BreemModel::createBodyLayer);
+    }
+
+    public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
+      event.register((stack, tintIndex) -> FastColor.ARGB32.opaque(((SpawnEggItem) stack.getItem()).getColor(tintIndex)),
+              ModItems.BREEM_VILLAGER_SPAWN_EGG.get(),
+              ModItems.BREEM_SOLDIER_SPAWN_EGG.get(),
+              ModItems.BREEM_BRUTE_SPAWN_EGG.get(),
+              ModItems.BREEM_SHAMAN_SPAWN_EGG.get());
     }
   }
 

@@ -1,6 +1,7 @@
 {
   "creativetab.fromtheskiesmcmod.fromtheskies_tools": "From The Skies Tools",
   "creativetab.fromtheskiesmcmod.fromtheskies_blocks": "From The Skies Blocks",
+  "creativetab.fromtheskiesmcmod.fromtheskies_entities": "From The Skies Entities",
   "block.fromtheskiesmcmod.alien_core": "Alien Core",
   "block.fromtheskiesmcmod.breem_grass": "Breem Grass",
   "block.fromtheskiesmcmod.breem_dirt": "Breem Dirt",
@@ -12,6 +13,10 @@
   "item.fromtheskiesmcmod.sample_axe": "Sample Axe",
   "item.fromtheskiesmcmod.sample_shovel": "Sample Shovel",
   "item.fromtheskiesmcmod.sample_hoe": "Sample Hoe",
+  "item.fromtheskiesmcmod.breem_villager_spawn_egg": "Breem Villager Spawn Egg",
+  "item.fromtheskiesmcmod.breem_soldier_spawn_egg": "Breem Soldier Spawn Egg",
+  "item.fromtheskiesmcmod.breem_brute_spawn_egg": "Breem Brute Spawn Egg",
+  "item.fromtheskiesmcmod.breem_shaman_spawn_egg": "Breem Shaman Spawn Egg",
   "item.fromtheskiesmcmod.gecko_spawn_egg": "Gecko Spawn Egg",
 
   "entity.fromtheskiesmcmod.gecko": "Gecko",

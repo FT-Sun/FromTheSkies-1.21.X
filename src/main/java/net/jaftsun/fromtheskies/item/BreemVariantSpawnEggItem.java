@@ -18,8 +18,9 @@ public class BreemVariantSpawnEggItem extends SpawnEggItem {
 
     private final BreemVariant variant;
 
-    public BreemVariantSpawnEggItem(EntityType<? extends BreemEntity> entityType, BreemVariant variant, Item.Properties properties) {
-        super(entityType, 0x31afaf, 0xffac00, properties);
+    public BreemVariantSpawnEggItem(EntityType<? extends BreemEntity> entityType, BreemVariant variant,
+                                    Item.Properties properties) {
+        super(entityType, variant.getSpawnEggBackgroundColor(), variant.getSpawnEggHighlightColor(), properties);
 
         this.variant = variant;
     }
