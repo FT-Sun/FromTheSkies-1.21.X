@@ -17,6 +17,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected void generate() {
         dropSelf(ModBlocks.ALIEN_CORE.get());
+        dropSelf(ModBlocks.BREEM_DIRT.get());
+        dropSelf(ModBlocks.BREEM_GRASS.get());
+        dropSelf(ModBlocks.BREEM_LOG.get());
+        dropSelf(ModBlocks.BREEM_LEAF.get());
 
 //        add(ModBlocks.SAMPLE_ORE.get(),
 //                block -> createOreDrop(ModBlocks.SAMPLE_ORE.get(), ModItems.RAW_SAMPLE.get()));

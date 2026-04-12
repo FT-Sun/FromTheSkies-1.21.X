@@ -30,7 +30,8 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         .pattern("  A")
         .define('A', ModBlocks.ALIEN_CORE.get())
         .unlockedBy("has_alien_core", has(ModBlocks.ALIEN_CORE))
-        .save(recipeOutput, "tutorialmod:diamond_block_from_alien_core");
+        .save(recipeOutput, FromTheSkies.MOD_ID + ":diamond_block_from_alien_core");
+
 
     // ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.BISMUTH.get(),
     // 9)
@@ -41,7 +42,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
     // 18)
     // .requires(ModBlocks.MAGIC_BLOCK)
     // .unlockedBy("has_magic_block", has(ModBlocks.MAGIC_BLOCK))
-    // .save(recipeOutput, "tutorialmod:bismuth_from_magic_block");
+    // .save(recipeOutput, FromTheSkies.MOD_ID + ":bismuth_from_magic_block");
 
     // oreSmelting(recipeOutput, BISMUTH_SMELTABLES, RecipeCategory.MISC,
     // ModItems.BISMUTH.get(), 0.25f, 200, "bismuth");

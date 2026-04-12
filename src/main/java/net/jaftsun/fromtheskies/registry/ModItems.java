@@ -1,23 +1,19 @@
 package net.jaftsun.fromtheskies.registry;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.entity.BreemVariant;
 import net.jaftsun.fromtheskies.entity.ModEntities;
+import net.jaftsun.fromtheskies.item.BreemVariantSpawnEggItem;
 import net.jaftsun.fromtheskies.item.ModToolTiers;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModItems {
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(FromTheSkies.MOD_ID);
 
-//    Sample Item
-//    public static final DeferredItem<Item> SAMPLE = ITEMS.register("sample", () -> new Item(new Item.Properties()));
-
-    public static final DeferredItem<Item> GECKO_SPAWN_EGG = ITEMS.register("gecko_spawn_egg",
-            () -> new DeferredSpawnEggItem(ModEntities.GECKO, 0x31afaf, 0xffac00,
-            new Item.Properties()));
+    public static final DeferredRegister.Items ITEMS =
+            DeferredRegister.createItems(FromTheSkies.MOD_ID);
 
     public static final DeferredItem<SwordItem> SAMPLE_SWORD = ITEMS.register("sample_sword",
             () -> new SwordItem(ModToolTiers.SAMPLE, new Item.Properties()
@@ -34,6 +30,38 @@ public class ModItems {
     public static final DeferredItem<HoeItem> SAMPLE_HOE = ITEMS.register("sample_hoe",
             () -> new HoeItem(ModToolTiers.SAMPLE, new Item.Properties()
                     .attributes(HoeItem.createAttributes(ModToolTiers.SAMPLE, 1.0f, -1f))));
+
+    public static final DeferredItem<BreemVariantSpawnEggItem> BREEM_VILLAGER_SPAWN_EGG =
+            ITEMS.register("breem_villager_spawn_egg",
+                    () -> new BreemVariantSpawnEggItem(
+                            ModEntities.BREEM.get(),
+                            BreemVariant.VILLAGER,
+                            new Item.Properties()
+                    ));
+
+    public static final DeferredItem<BreemVariantSpawnEggItem> BREEM_SOLDIER_SPAWN_EGG =
+            ITEMS.register("breem_soldier_spawn_egg",
+                    () -> new BreemVariantSpawnEggItem(
+                            ModEntities.BREEM.get(),
+                            BreemVariant.SOLDIER,
+                            new Item.Properties()
+                    ));
+
+    public static final DeferredItem<BreemVariantSpawnEggItem> BREEM_BRUTE_SPAWN_EGG =
+            ITEMS.register("breem_brute_spawn_egg",
+                    () -> new BreemVariantSpawnEggItem(
+                            ModEntities.BREEM.get(),
+                            BreemVariant.BRUTE,
+                            new Item.Properties()
+                    ));
+
+    public static final DeferredItem<BreemVariantSpawnEggItem> BREEM_SHAMAN_SPAWN_EGG =
+            ITEMS.register("breem_shaman_spawn_egg",
+                    () -> new BreemVariantSpawnEggItem(
+                            ModEntities.BREEM.get(),
+                            BreemVariant.SHAMAN,
+                            new Item.Properties()
+                    ));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

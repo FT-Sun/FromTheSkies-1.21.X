@@ -6,6 +6,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -30,10 +31,42 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> ALIEN_CORE = registerBlock("alien_core",
             () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_GREEN)
+                    .mapColor(MapColor.COLOR_PURPLE)
                     .strength(5.0F, 12.0F)
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.SCULK)));
+
+    public static final DeferredBlock<Block> BREEM_GRASS = registerBlock("breem_grass",
+            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_YELLOW)
+                    .strength(4.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.GRASS)));
+
+    public static final DeferredBlock<Block> BREEM_DIRT = registerBlock("breem_dirt",
+            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DIRT)
+                    .strength(4.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.GRAVEL)));
+
+    public static final DeferredBlock<Block> BREEM_LOG = registerBlock("breem_log",
+            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WOOD)
+                    .strength(5.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.WOOD)));
+
+    public static final DeferredBlock<Block> BREEM_LEAF = registerBlock("breem_leaf",
+            () -> new LeavesBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_ORANGE)
+                    .strength(0.2F)
+                    .noOcclusion()
+                    .sound(SoundType.GRASS)
+                    .isValidSpawn((state, level, pos, type) -> false)
+                    .isSuffocating((state, level, pos) -> false)
+                    .isViewBlocking((state, level, pos) -> false)));
+
 
     private ModBlocks() {
     }

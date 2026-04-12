@@ -10,26 +10,32 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredItem;
 
 public class ModItemModelProvider extends ItemModelProvider {
+
     public ModItemModelProvider(PackOutput output, ExistingFileHelper existingFileHelper) {
         super(output, FromTheSkies.MOD_ID, existingFileHelper);
     }
 
     @Override
     protected void registerModels() {
-//       basicItem(ModItems.SAMPLE_ITEM.get());
 
-       handheldItem(ModItems.SAMPLE_SWORD);
-       handheldItem(ModItems.SAMPLE_PICKAXE);
-       handheldItem(ModItems.SAMPLE_AXE);
-       handheldItem(ModItems.SAMPLE_SHOVEL);
-       handheldItem(ModItems.SAMPLE_HOE);
+        handheldItem(ModItems.SAMPLE_SWORD);
+        handheldItem(ModItems.SAMPLE_PICKAXE);
+        handheldItem(ModItems.SAMPLE_AXE);
+        handheldItem(ModItems.SAMPLE_SHOVEL);
+        handheldItem(ModItems.SAMPLE_HOE);
 
-       withExistingParent(ModItems.GECKO_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
+        spawnEggItem(ModItems.BREEM_VILLAGER_SPAWN_EGG);
+        spawnEggItem(ModItems.BREEM_SOLDIER_SPAWN_EGG);
+        spawnEggItem(ModItems.BREEM_BRUTE_SPAWN_EGG);
+        spawnEggItem(ModItems.BREEM_SHAMAN_SPAWN_EGG);
+    }
+
+    private ItemModelBuilder spawnEggItem(DeferredItem<?> item) {
+        return withExistingParent(item.getId().getPath(), mcLoc("item/template_spawn_egg"));
     }
 
     private ItemModelBuilder handheldItem(DeferredItem<?> item) {
         return withExistingParent(item.getId().getPath(),
                 ResourceLocation.parse("item/handheld")).texture("layer0",
                 ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "item/" + item.getId().getPath()));
-    }
-}
+}}
