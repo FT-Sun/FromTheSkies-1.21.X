@@ -75,11 +75,7 @@ public class BreemRenderer extends MobRenderer<BreemEntity, HierarchicalModel<Br
         }
 
         //Scale up the normal Breem model so it matches piglings size
-        if (entity.isBaby()) {
-            poseStack.scale(1.1f, 1.1f, 1.1f);
-        } else {
-            poseStack.scale(2.25f, 2.25f, 2.25f);
-        }
+        poseStack.scale(2.25f, 2.25f, 2.25f);
 
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
     }
