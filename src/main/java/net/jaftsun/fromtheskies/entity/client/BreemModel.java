@@ -77,9 +77,7 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
                 PartPose.offset(0.0F, -1.0F, 0.0F)
         );
 
-        Mask.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(0, 19).addBox(0.9F, -0.25F, -2.75F, 0.25F, 0.25F, 3.5F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(1.0F, -12.0F, 1.0F, 0.0F, 1.5708F, 0.0F)
-        );
+
 
         partDefinition.addOrReplaceChild("Torso",
                 CubeListBuilder.create().texOffs(1, 8).addBox(-1.25F, -8.0F, -1.5F, 2.5F, 2.0F, 2.0F, new CubeDeformation(0.001F))
