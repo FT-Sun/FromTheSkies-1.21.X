@@ -34,6 +34,7 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
     private final ModelPart LeftArm;
     private final ModelPart RightLeg;
     private final ModelPart LeftLeg;
+    private final ModelPart Mask;
 
 
     public BreemModel(ModelPart root) {
@@ -46,13 +47,14 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
         this.LeftArm = root.getChild("LeftArm");
         this.RightLeg = root.getChild("RightLeg");
         this.LeftLeg = root.getChild("LeftLeg");
+        this.Mask = this.Head.getChild("Mask");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition meshDefinition = new MeshDefinition();
         PartDefinition partDefinition = meshDefinition.getRoot();
 
-        partDefinition.addOrReplaceChild("Head",
+        PartDefinition Head = partDefinition.addOrReplaceChild("Head",
                 CubeListBuilder.create().texOffs(26, 8).addBox(-1.0F, -3.0F, -1.0F, 2.0F, 4.0F, 1.0F, new CubeDeformation(0.0001F))
                         .texOffs(15, 4).addBox(-1.0F, -2.5F, -1.75F, 2.0F, 3.0F, 1.0F, new CubeDeformation(0.0F))
                         .texOffs(17, 1).addBox(-0.5F, -3.5F, -1.0F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
@@ -63,6 +65,20 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
                         .texOffs(23, 17).addBox(-1.5F, -2.5F, -1.0F, 3.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
                         .texOffs(14, 9).addBox(-1.5F, -0.5F, -1.0F, 3.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 13.0F, -1.0F)
+        );
+
+        PartDefinition Mask = Head.addOrReplaceChild("Mask", CubeListBuilder.create()
+                        // Top (wider)
+                        .texOffs(1, 13).addBox(-2.0F, -2.0F, -2.2F, 4.0F, 3.0F, 0.25F, new CubeDeformation(0.0F))
+
+                        // Bottom (narrower)
+                        .texOffs(1, 16).addBox(-1.0F, 1.0F, -2.2F, 2.0F, 2.0F, 0.25F, new CubeDeformation(0.0F)),
+
+                PartPose.offset(0.0F, -1.0F, 0.0F)
+        );
+
+        Mask.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(0, 19).addBox(0.9F, -0.25F, -2.75F, 0.25F, 0.25F, 3.5F, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(1.0F, -12.0F, 1.0F, 0.0F, 1.5708F, 0.0F)
         );
 
         partDefinition.addOrReplaceChild("Torso",
@@ -115,6 +131,9 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
         this.Head.xRot = headPitch * ((float) Math.PI / 180F);
 
         BreemVariant variant = entity.getVariant();
+
+        //Only shows mask for shaman
+        this.Mask.visible = (variant == BreemVariant.SHAMAN);
 
 //        switch (variant) {
 //            case VILLAGER -> {
