@@ -1,8 +1,7 @@
 package net.jaftsun.fromtheskies;
 
 import net.jaftsun.fromtheskies.entity.ModEntities;
-import net.jaftsun.fromtheskies.entity.client.BreemRenderer;
-import net.jaftsun.fromtheskies.entity.client.GeckoRenderer;
+import net.jaftsun.fromtheskies.entity.client.*;
 import net.jaftsun.fromtheskies.item.ModCreativeModeTabs;
 import net.jaftsun.fromtheskies.registry.ModItems;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -32,7 +31,6 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
-import net.jaftsun.fromtheskies.entity.client.BreemModel;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
@@ -118,6 +116,8 @@ public class FromTheSkies {
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
       event.registerLayerDefinition(BreemModel.LAYER_LOCATION, BreemModel::createBodyLayer);
+      event.registerLayerDefinition(BreemSoldierModel.LAYER_LOCATION, BreemSoldierModel::createBodyLayer);
+      event.registerLayerDefinition(BreemBruteModel.LAYER_LOCATION, BreemBruteModel::createBodyLayer);
     }
 
     public static void registerItemColors(RegisterColorHandlersEvent.Item event) {

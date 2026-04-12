@@ -12,23 +12,36 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
+import java.util.Objects;
+import net.minecraft.client.model.HierarchicalModel; //Added this so that BreemModel extends to the SoldierModel
 
-public class BreemRenderer extends MobRenderer<BreemEntity, BreemModel<BreemEntity>> {
+public class BreemRenderer extends MobRenderer<BreemEntity, HierarchicalModel<BreemEntity>> {
 
     private static final Map<BreemVariant, ResourceLocation> LOCATION_BY_VARIANT =
             Util.make(Maps.newEnumMap(BreemVariant.class), map -> {
                 map.put(BreemVariant.VILLAGER,
                         ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "textures/entity/breem/breem_villager_texture.png"));
                 map.put(BreemVariant.SOLDIER,
-                        ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "textures/entity/breem/breem_soldier_texture.png"));
+                        ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "textures/entity/breem/breem_soldier_corrected_texture.png"));
                 map.put(BreemVariant.BRUTE,
                         ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "textures/entity/breem/breem_brute_texture.png"));
                 map.put(BreemVariant.SHAMAN,
                         ResourceLocation.fromNamespaceAndPath(FromTheSkies.MOD_ID, "textures/entity/breem/breem_shaman_texture.png"));
             });
+    private final BreemModel<BreemEntity> defaultModel;
+    private final BreemSoldierModel<BreemEntity> soldierModel;
+    private final BreemBruteModel<BreemEntity> bruteModel;
 
     public BreemRenderer(EntityRendererProvider.Context context) {
         super(context, new BreemModel<>(context.bakeLayer(BreemModel.LAYER_LOCATION)), 0.5f);
+
+        //Keeps references to both models to switch depedning on variants
+        this.defaultModel = new BreemModel<>(context.bakeLayer(BreemModel.LAYER_LOCATION));
+        this.soldierModel = new BreemSoldierModel<>(context.bakeLayer(BreemSoldierModel.LAYER_LOCATION));
+        this.bruteModel = new BreemBruteModel<>(context.bakeLayer(BreemBruteModel.LAYER_LOCATION));
+
+        //default model used for villager and shaman
+        this.model = this.defaultModel;
     }
 
     @Override
@@ -45,8 +58,27 @@ public class BreemRenderer extends MobRenderer<BreemEntity, BreemModel<BreemEnti
     @Override
     public void render(BreemEntity entity, float entityYaw, float partialTicks, PoseStack poseStack,
                        MultiBufferSource buffer, int packedLight) {
+
+        BreemVariant variant = entity.getVariant();
+
+        if (variant == BreemVariant.UNSET){
+            variant = BreemVariant.VILLAGER;
+        }
+
+        //Use soldier model only for soldier
+        if (variant == BreemVariant.SOLDIER){
+            this.model = soldierModel;
+        } else if (variant == BreemVariant.BRUTE){
+            this.model = this.bruteModel;
+        } else {
+            this.model = this.defaultModel;
+        }
+
+        //Scale up the normal Breem model so it matches piglings size
         if (entity.isBaby()) {
-            poseStack.scale(0.5f, 0.5f, 0.5f);
+            poseStack.scale(1.1f, 1.1f, 1.1f);
+        } else {
+            poseStack.scale(2.25f, 2.25f, 2.25f);
         }
 
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
