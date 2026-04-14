@@ -110,7 +110,7 @@ public class FromTheSkies {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
       EntityRenderers.register(ModEntities.BREEM.get(), BreemRenderer::new);
-      ItemBlockRenderTypes.setRenderLayer(ModBlocks.BREEM_LEAF.get(), RenderType.cutout());
+//      ItemBlockRenderTypes.setRenderLayer(ModBlocks.BREEM_LEAF.get(), RenderType.cutout());
     }
 
     @SubscribeEvent
