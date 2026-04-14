@@ -13,6 +13,7 @@ import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
 import net.jaftsun.fromtheskies.takeover.world.MeteorSchedulerService;
 import net.jaftsun.fromtheskies.takeover.world.BiomeConversionService;
 import net.jaftsun.fromtheskies.takeover.world.SurfaceSpreadService;
+import net.jaftsun.fromtheskies.takeover.world.TakeoverBiomes;
 import net.jaftsun.fromtheskies.takeover.world.TakeoverCoreService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -693,6 +694,26 @@ public final class TakeoverRegistryGameTests {
     boolean idempotentRecheck = BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, 0.4D);
     helper.assertTrue(!idempotentRecheck, "Expected repeated threshold checks to remain idempotent after conversion");
     helper.assertTrue(data.getConvertedChunkCount() == 1, "Expected converted chunk count to remain stable after recheck");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void chunk_threshold_biome_flip_updates_chunk_biome(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    ChunkPos chunkPos = new ChunkPos(helper.absolutePos(new BlockPos(1, 1, 1)));
+    data.setEligibleSurfaceCount(chunkPos, 10);
+    data.setInfectedSurfaceCount(chunkPos, 10);
+
+    boolean converted = BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, 0.5D);
+    helper.assertTrue(converted, "Expected threshold hit to trigger biome conversion");
+
+    BlockPos samplePos = new BlockPos(chunkPos.getMiddleBlockX(), level.getMinBuildHeight(), chunkPos.getMiddleBlockZ());
+    helper.assertTrue(
+        level.getBiome(samplePos).is(TakeoverBiomes.ALIEN_OVERGROWTH),
+        "Expected converted chunk biome sample to resolve to alien_overgrowth");
     helper.succeed();
   }
 
