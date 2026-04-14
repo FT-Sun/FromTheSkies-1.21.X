@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
  * Local adjacency spread engine plus chunk-level infection accounting.
@@ -165,19 +166,14 @@ public final class SurfaceSpreadService {
     private static BlockPos findTopEligibleSurface(ServerLevel level, int x, int z) {
         int minY = level.getMinBuildHeight();
         int maxY = level.getMaxBuildHeight() - 1;
-        // First non-air block from the top is the only candidate for that column.
-        for (int y = maxY; y >= minY; y--) {
-            BlockPos candidate = new BlockPos(x, y, z);
-            BlockState state = level.getBlockState(candidate);
-            if (state.isAir()) {
-                continue;
-            }
-            if (isEligibleSurfaceBlock(state) && (y == maxY || level.getBlockState(candidate.above()).isAir())) {
-                return candidate;
-            }
+        // Heightmap returns the first open block above the no-leaves surface, so step down to the surface block.
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+        if (y < minY || y > maxY) {
             return null;
         }
-        return null;
+        BlockPos candidate = new BlockPos(x, y, z);
+        BlockState state = level.getBlockState(candidate);
+        return isEligibleSurfaceBlock(state) ? candidate : null;
     }
 
     private static boolean isEligibleSurfaceBlock(BlockState state) {
