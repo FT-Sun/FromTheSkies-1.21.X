@@ -455,7 +455,7 @@ public final class TakeoverRegistryGameTests {
         data.hasInfectedSurfaceBlock(seedCandidate),
         "Expected deterministic nearest eligible surface around core to be seeded as infected");
     helper.assertTrue(
-        level.getBlockState(seedCandidate).is(Blocks.SCULK),
+        level.getBlockState(seedCandidate).is(ModBlocks.BREEM_GRASS.get()),
         "Expected seeded infection to mutate the world block for visible takeover progression");
     helper.succeed();
   }
@@ -479,7 +479,7 @@ public final class TakeoverRegistryGameTests {
     helper.assertTrue(spread, "Expected grass-like local spread to operate on natural surface blocks");
     helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected target natural surface block to become infected");
     helper.assertTrue(
-        level.getBlockState(target).is(Blocks.SCULK),
+        level.getBlockState(target).is(ModBlocks.BREEM_GRASS.get()),
         "Expected infected natural surface block to visually convert for client validation");
     helper.succeed();
   }

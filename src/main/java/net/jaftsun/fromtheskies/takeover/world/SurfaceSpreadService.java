@@ -12,7 +12,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -226,9 +225,9 @@ public final class SurfaceSpreadService {
     }
 
     private static void applyVisualInfection(ServerLevel level, BlockPos pos) {
-        if (!level.getBlockState(pos).is(Blocks.SCULK)) {
+        if (!level.getBlockState(pos).is(ModBlocks.BREEM_GRASS.get())) {
             // Flag 3 = notify neighbors (1) + send block update to clients (2).
-            level.setBlock(pos, Blocks.SCULK.defaultBlockState(), 3);
+            level.setBlock(pos, ModBlocks.BREEM_GRASS.get().defaultBlockState(), 3);
         }
     }
 }
