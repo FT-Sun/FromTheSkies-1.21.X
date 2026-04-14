@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.jaftsun.fromtheskies.Config;
-import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.TakeoverLifecycleState;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.minecraft.core.BlockPos;

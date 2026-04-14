@@ -1,11 +1,12 @@
 package net.jaftsun.fromtheskies.datagen;
 
-import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.loot.BlockLootSubProvider;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.Block;
+import net.neoforged.fml.common.Mod;
 
 import java.util.Set;
 
@@ -20,10 +21,12 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.BREEM_DIRT.get());
         dropSelf(ModBlocks.BREEM_GRASS.get());
         dropSelf(ModBlocks.BREEM_LOG.get());
-        dropSelf(ModBlocks.BREEM_LEAF.get());
+        dropSelf(ModBlocks.BREEM_STRIPPEDLOG.get());
+        dropSelf(ModBlocks.BREEM_TREESAPLING.get());
 
-//        add(ModBlocks.SAMPLE_ORE.get(),
-//                block -> createOreDrop(ModBlocks.SAMPLE_ORE.get(), ModItems.RAW_SAMPLE.get()));
+        this.add(ModBlocks.BREEM_LEAF.get(), block ->
+                createLeavesDrops(block, ModBlocks.BREEM_TREESAPLING.get(), NORMAL_LEAVES_SAPLING_CHANCES));
+
     }
 
 

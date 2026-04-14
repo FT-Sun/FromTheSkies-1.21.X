@@ -1,18 +1,21 @@
-package net.jaftsun.fromtheskies.registry;
+package net.jaftsun.fromtheskies.block;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.block.custom.ModFlammableRotatedPillarBlock;
+import net.jaftsun.fromtheskies.registry.ModItems;
+import net.jaftsun.fromtheskies.worldgen.tree.ModTreesGrowers;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DropExperienceBlock;
-import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.Supplier;
@@ -38,7 +41,7 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> BREEM_GRASS = registerBlock("breem_grass",
             () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_YELLOW)
+                    .mapColor(MapColor.COLOR_ORANGE)
                     .strength(4.0F, 12.0F)
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.GRASS)));
@@ -51,21 +54,39 @@ public final class ModBlocks {
                     .sound(SoundType.GRAVEL)));
 
     public static final DeferredBlock<Block> BREEM_LOG = registerBlock("breem_log",
-            () -> new DropExperienceBlock(UniformInt.of(2, 4),BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.WOOD)
-                    .strength(5.0F, 12.0F)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.WOOD)));
+            () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)
+                            .mapColor(MapColor.WOOD)
+                            .strength(5.0F, 12.0F)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.WOOD)));
+
+    public static final DeferredBlock<Block> BREEM_STRIPPEDLOG = registerBlock("block_breem_strippedlog",
+            () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_OAK_LOG)
+                            .mapColor(MapColor.WOOD)
+                            .strength(5.0F, 12.0F)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.WOOD)));
 
     public static final DeferredBlock<Block> BREEM_LEAF = registerBlock("breem_leaf",
-            () -> new LeavesBlock(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_ORANGE)
-                    .strength(0.2F)
-                    .noOcclusion()
-                    .sound(SoundType.GRASS)
-                    .isValidSpawn((state, level, pos, type) -> false)
-                    .isSuffocating((state, level, pos) -> false)
-                    .isViewBlocking((state, level, pos) -> false)));
+            () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES)) {
+                @Override
+                public boolean isFlammable(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+                    return true;
+                }
+
+                @Override
+                public int getFlammability(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+                    return 60;
+                }
+
+                @Override
+                public int getFireSpreadSpeed(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+                    return 30;
+                }
+            });
+
+    public static final DeferredBlock<Block> BREEM_TREESAPLING = registerBlock("block_breem_treesappling",
+            () -> new SaplingBlock(ModTreesGrowers.BREEMLOG, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)));
 
 
     private ModBlocks() {
