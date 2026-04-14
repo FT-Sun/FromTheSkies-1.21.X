@@ -2,6 +2,7 @@ package net.jaftsun.fromtheskies.takeover.event;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
 import net.jaftsun.fromtheskies.takeover.command.TakeoverCommands;
+import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
 import net.jaftsun.fromtheskies.takeover.world.MeteorSchedulerService;
 import net.jaftsun.fromtheskies.takeover.world.SurfaceSpreadService;
@@ -35,7 +36,7 @@ public final class TakeoverServerEvents {
         }
         // Order matters: scheduling may activate takeover, core placement materializes it, spread advances it.
         MeteorSchedulerService.tick(level);
-        TakeoverCoreService.placeCoreIfNeeded(level, net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData.get(level));
+        TakeoverCoreService.placeCoreIfNeeded(level, TakeoverSavedData.get(level));
         SurfaceSpreadService.tick(level);
     }
 

@@ -22,11 +22,13 @@ import net.minecraft.world.level.saveddata.SavedData;
  * Persistent takeover runtime state for a single server level.
  */
 public class TakeoverSavedData extends SavedData {
+    // Persistence Metadata
     public static final String DATA_NAME = "fromtheskies_takeover";
     public static final SavedData.Factory<TakeoverSavedData> FACTORY = new SavedData.Factory<>(
             TakeoverSavedData::new,
             TakeoverSavedData::load);
 
+    // NBT Key Constants
     private static final String STATE_KEY = "state";
     private static final String TAKEOVER_LOCKED_KEY = "takeoverLocked";
     private static final String ARMED_AT_GAME_TIME_KEY = "armedAtGameTime";
@@ -43,23 +45,29 @@ public class TakeoverSavedData extends SavedData {
     private static final String COUNT_KEY = "count";
     private static final String BLOCKED_FRONTIER_EDGES_KEY = "blockedFrontierEdges";
 
+    // Shared Helper Constants
+    private static final long NO_GAME_TIME = -1L;
+    private static final String FRONTIER_EDGE_SEPARATOR = "->";
+
+    // Lifecycle And Scheduler State
     private TakeoverLifecycleState state = TakeoverLifecycleState.DORMANT;
     private boolean takeoverLocked;
-    // -1L is the "not scheduled/not set yet" sentinel for game-time based fields.
-    private long armedAtGameTime = -1L;
-    private long scheduledMeteorGameTime = -1L;
+    private long armedAtGameTime = NO_GAME_TIME;
+    private long scheduledMeteorGameTime = NO_GAME_TIME;
     private int schedulerRetryTicksRemaining;
-    private long lastSpreadTickGameTime = -1L;
+    private long lastSpreadTickGameTime = NO_GAME_TIME;
     private BlockPos corePos;
 
-    // Compact packed position/chunk collections for large, frequently-mutated sets.
+    // Packed Position/Chunk Tracking
     private final Set<Long> generatedChunkLongs = new HashSet<>();
     private final Set<Long> infectedSurfaceBlockLongs = new HashSet<>();
     private final Set<Long> convertedChunkLongs = new HashSet<>();
-    // Per-chunk counters used for conversion threshold checks.
+
+    // Per-Chunk Spread/Conversion Counters
     private final Map<Long, Integer> eligibleSurfaceCountsByChunk = new HashMap<>();
     private final Map<Long, Integer> infectedSurfaceCountsByChunk = new HashMap<>();
-    // Frontier attempts blocked by non-generated neighboring chunks.
+
+    // Frontier Diagnostics
     private final Set<String> blockedFrontierEdges = new HashSet<>();
 
     public static TakeoverSavedData get(ServerLevel level) {
@@ -76,11 +84,7 @@ public class TakeoverSavedData extends SavedData {
         data.scheduledMeteorGameTime = tag.getLong(SCHEDULED_METEOR_GAME_TIME_KEY);
         data.schedulerRetryTicksRemaining = tag.getInt(SCHEDULER_RETRY_TICKS_REMAINING_KEY);
         data.lastSpreadTickGameTime = tag.getLong(LAST_SPREAD_TICK_GAME_TIME_KEY);
-
-        // Tag.TAG_LONG guards type safety before reading packed BlockPos long payload.
-        if (tag.contains(CORE_POS_KEY, Tag.TAG_LONG)) {
-            data.corePos = BlockPos.of(tag.getLong(CORE_POS_KEY));
-        }
+        data.corePos = readBlockPos(tag, CORE_POS_KEY);
 
         loadLongSet(tag, GENERATED_CHUNKS_KEY, data.generatedChunkLongs);
         loadLongSet(tag, INFECTED_SURFACE_BLOCKS_KEY, data.infectedSurfaceBlockLongs);
@@ -101,9 +105,7 @@ public class TakeoverSavedData extends SavedData {
         tag.putLong(SCHEDULED_METEOR_GAME_TIME_KEY, this.scheduledMeteorGameTime);
         tag.putInt(SCHEDULER_RETRY_TICKS_REMAINING_KEY, this.schedulerRetryTicksRemaining);
         tag.putLong(LAST_SPREAD_TICK_GAME_TIME_KEY, this.lastSpreadTickGameTime);
-        if (this.corePos != null) {
-            tag.putLong(CORE_POS_KEY, this.corePos.asLong());
-        }
+        writeBlockPos(tag, CORE_POS_KEY, this.corePos);
 
         tag.putLongArray(GENERATED_CHUNKS_KEY, toLongArray(this.generatedChunkLongs));
         tag.putLongArray(INFECTED_SURFACE_BLOCKS_KEY, toLongArray(this.infectedSurfaceBlockLongs));
@@ -192,13 +194,11 @@ public class TakeoverSavedData extends SavedData {
     }
 
     public boolean hasGeneratedChunk(ChunkPos chunkPos) {
-        return this.generatedChunkLongs.contains(chunkPos.toLong());
+        return containsPackedChunk(this.generatedChunkLongs, chunkPos);
     }
 
     public void addGeneratedChunk(ChunkPos chunkPos) {
-        if (this.generatedChunkLongs.add(chunkPos.toLong())) {
-            this.setDirty();
-        }
+        markDirtyIf(addPackedChunk(this.generatedChunkLongs, chunkPos));
     }
 
     public Set<BlockPos> getInfectedSurfaceBlocks() {
@@ -206,13 +206,11 @@ public class TakeoverSavedData extends SavedData {
     }
 
     public void addInfectedSurfaceBlock(BlockPos pos) {
-        if (this.infectedSurfaceBlockLongs.add(pos.asLong())) {
-            this.setDirty();
-        }
+        markDirtyIf(addPackedBlockPos(this.infectedSurfaceBlockLongs, pos));
     }
 
     public boolean hasInfectedSurfaceBlock(BlockPos pos) {
-        return this.infectedSurfaceBlockLongs.contains(pos.asLong());
+        return this.infectedSurfaceBlockLongs.contains(pack(pos));
     }
 
     public int getInfectedSurfaceBlockCount() {
@@ -224,13 +222,11 @@ public class TakeoverSavedData extends SavedData {
     }
 
     public void addConvertedChunk(ChunkPos chunkPos) {
-        if (this.convertedChunkLongs.add(chunkPos.toLong())) {
-            this.setDirty();
-        }
+        markDirtyIf(addPackedChunk(this.convertedChunkLongs, chunkPos));
     }
 
     public boolean hasConvertedChunk(ChunkPos chunkPos) {
-        return this.convertedChunkLongs.contains(chunkPos.toLong());
+        return containsPackedChunk(this.convertedChunkLongs, chunkPos);
     }
 
     public int getConvertedChunkCount() {
@@ -253,7 +249,7 @@ public class TakeoverSavedData extends SavedData {
     }
 
     public int getEligibleSurfaceCount(ChunkPos chunkPos) {
-        return this.eligibleSurfaceCountsByChunk.getOrDefault(chunkPos.toLong(), 0);
+        return getChunkCount(this.eligibleSurfaceCountsByChunk, chunkPos);
     }
 
     public void setEligibleSurfaceCount(ChunkPos chunkPos, int count) {
@@ -261,7 +257,7 @@ public class TakeoverSavedData extends SavedData {
     }
 
     public int getInfectedSurfaceCount(ChunkPos chunkPos) {
-        return this.infectedSurfaceCountsByChunk.getOrDefault(chunkPos.toLong(), 0);
+        return getChunkCount(this.infectedSurfaceCountsByChunk, chunkPos);
     }
 
     public void setInfectedSurfaceCount(ChunkPos chunkPos, int count) {
@@ -272,10 +268,10 @@ public class TakeoverSavedData extends SavedData {
         // GameTests use this to guarantee deterministic state between scenarios.
         this.state = TakeoverLifecycleState.DORMANT;
         this.takeoverLocked = false;
-        this.armedAtGameTime = -1L;
-        this.scheduledMeteorGameTime = -1L;
+        this.armedAtGameTime = NO_GAME_TIME;
+        this.scheduledMeteorGameTime = NO_GAME_TIME;
         this.schedulerRetryTicksRemaining = 0;
-        this.lastSpreadTickGameTime = -1L;
+        this.lastSpreadTickGameTime = NO_GAME_TIME;
         this.corePos = null;
         this.generatedChunkLongs.clear();
         this.infectedSurfaceBlockLongs.clear();
@@ -287,24 +283,68 @@ public class TakeoverSavedData extends SavedData {
     }
 
     private void setChunkCount(Map<Long, Integer> map, ChunkPos chunkPos, int count) {
-        long chunkLong = chunkPos.toLong();
+        long packedChunk = pack(chunkPos);
         // Zero/negative values are represented as missing entries to keep serialization compact.
         if (count <= 0) {
-            if (map.remove(chunkLong) != null) {
+            if (map.remove(packedChunk) != null) {
                 this.setDirty();
             }
             return;
         }
-        Integer previous = map.put(chunkLong, count);
+        Integer previous = map.put(packedChunk, count);
         // Map.put returns the previous value (or null when absent) so we can avoid false dirty writes.
         if (previous == null || previous != count) {
             this.setDirty();
         }
     }
 
+    private static int getChunkCount(Map<Long, Integer> map, ChunkPos chunkPos) {
+        return map.getOrDefault(pack(chunkPos), 0);
+    }
+
     private static void loadLongSet(CompoundTag tag, String key, Set<Long> target) {
         for (long value : tag.getLongArray(key)) {
             target.add(value);
+        }
+    }
+
+    private static BlockPos readBlockPos(CompoundTag tag, String key) {
+        // Tag.TAG_LONG guards type safety before reading packed BlockPos payload.
+        if (!tag.contains(key, Tag.TAG_LONG)) {
+            return null;
+        }
+        return BlockPos.of(tag.getLong(key));
+    }
+
+    private static void writeBlockPos(CompoundTag tag, String key, BlockPos pos) {
+        if (pos != null) {
+            tag.putLong(key, pack(pos));
+        }
+    }
+
+    private static boolean containsPackedChunk(Set<Long> packedChunks, ChunkPos chunkPos) {
+        return packedChunks.contains(pack(chunkPos));
+    }
+
+    private static boolean addPackedChunk(Set<Long> packedChunks, ChunkPos chunkPos) {
+        return packedChunks.add(pack(chunkPos));
+    }
+
+    private static boolean addPackedBlockPos(Set<Long> packedPositions, BlockPos pos) {
+        return packedPositions.add(pack(pos));
+    }
+
+    private static long pack(ChunkPos chunkPos) {
+        return chunkPos.toLong();
+    }
+
+    private static long pack(BlockPos pos) {
+        return pos.asLong();
+    }
+
+    private void markDirtyIf(boolean changed) {
+        if (changed) {
+            this.setDirty();
         }
     }
 
@@ -361,7 +401,7 @@ public class TakeoverSavedData extends SavedData {
 
     private static String toFrontierEdgeKey(ChunkPos sourceChunk, ChunkPos targetChunk) {
         // Stable directional key keeps frontier diagnostics deterministic across save/load.
-        return sourceChunk.toLong() + "->" + targetChunk.toLong();
+        return pack(sourceChunk) + FRONTIER_EDGE_SEPARATOR + pack(targetChunk);
     }
 
     private static TakeoverLifecycleState parseState(String savedState) {
