@@ -66,7 +66,7 @@ public class FromTheSkies {
   }
 
   private void commonSetup(FMLCommonSetupEvent event) {
-    event.enqueueWork(TakeoverServerEvents::register);
+
   }
 
   private void addCreative(BuildCreativeModeTabContentsEvent event) {

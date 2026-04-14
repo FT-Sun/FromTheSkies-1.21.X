@@ -543,8 +543,11 @@ public final class TakeoverRegistryGameTests {
     data.resetForTesting();
     data.setState(TakeoverLifecycleState.ACTIVE);
 
-    BlockPos source = new BlockPos(15, 80, 0);
-    BlockPos target = new BlockPos(16, 80, 0);
+    BlockPos origin = helper.absolutePos(new BlockPos(0, 2, 0));
+    // Pick a source/target pair that definitely crosses a real chunk boundary near this test instance.
+    int sourceX = origin.getX() + Math.floorMod(15 - Math.floorMod(origin.getX(), 16), 16);
+    BlockPos source = new BlockPos(sourceX, origin.getY(), origin.getZ());
+    BlockPos target = source.east();
     level.setBlock(source, Blocks.STONE.defaultBlockState(), 3);
     level.setBlock(target, Blocks.STONE.defaultBlockState(), 3);
 
