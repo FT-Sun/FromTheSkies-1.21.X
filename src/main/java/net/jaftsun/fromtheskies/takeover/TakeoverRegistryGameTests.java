@@ -6,7 +6,7 @@ import com.electronwill.nightconfig.core.UnmodifiableConfig;
 
 import net.jaftsun.fromtheskies.Config;
 import net.jaftsun.fromtheskies.FromTheSkies;
-import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.command.TakeoverCommands;
 import net.jaftsun.fromtheskies.takeover.data.TakeoverSavedData;
 import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;

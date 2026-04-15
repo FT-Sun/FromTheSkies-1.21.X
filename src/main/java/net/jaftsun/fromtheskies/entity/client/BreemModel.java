@@ -18,6 +18,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
 
@@ -85,7 +86,7 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
                 PartPose.offset(0.0F, 24.0F, 0.0F)
         );
 
-        partDefinition.addOrReplaceChild("RightArm",
+        PartDefinition RightArm = partDefinition.addOrReplaceChild("RightArm",
                 CubeListBuilder.create().texOffs(0, 24).mirror()
                         .addBox(-1.25F, -1.0F, -1.0F, 1.25F, 5.0F, 2.0F, new CubeDeformation(0.0F))
                         .mirror(false),
@@ -125,35 +126,52 @@ public class BreemModel<T extends BreemEntity> extends HierarchicalModel<T> {
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
+        //Base head look
         this.Head.yRot = netHeadYaw * ((float) Math.PI / 180F);
         this.Head.xRot = headPitch * ((float) Math.PI / 180F);
 
+
         BreemVariant variant = entity.getVariant();
+
 
         //Only shows mask for shaman
         this.Mask.visible = (variant == BreemVariant.SHAMAN);
 
-//        switch (variant) {
-//            case VILLAGER -> {
-//                this.animateWalk(BreemVillagerAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-//                this.animate(entity.idleAnimationState, BreemVillagerAnimation.Idle, ageInTicks, 1.0F);
-//                this.animate(entity.attackAnimationState, BreemVillagerAnimation.Hitting, ageInTicks, 1.0F);
-//            }
-//            case SOLDIER -> {
-//                this.animateWalk(BreemSoldierAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-//                this.animate(entity.idleAnimationState, BreemSoldierAnimation.Idle, ageInTicks, 1.0F);
-//                this.animate(entity.attackAnimationState, BreemSoldierAnimation.Hitting, ageInTicks, 1.0F);
-//            }
-//            case BRUTE -> {
-//                this.animateWalk(BreemBruteAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-//                this.animate(entity.idleAnimationState, BreemBruteAnimation.Idle, ageInTicks, 1.0F);
-//                this.animate(entity.attackAnimationState, BreemBruteAnimation.Hitting, ageInTicks, 1.0F);
-//            }
-//            case SHAMAN -> {
-//                this.animateWalk(BreemShamanAnimation.Walking, limbSwing, limbSwingAmount, 2.0F, 2.5F);
-//                this.animate(entity.idleAnimationState, BreemShamanAnimation.Idle, ageInTicks, 1.0F);
-//                this.animate(entity.attackAnimationState, BreemShamanAnimation.SpellOrAttack, ageInTicks, 1.0F);
-//            }
-//        }
+
+        if (entity.isInspectAnimationActive()) {
+            //Hold Arm
+            this.RightArm.xRot = -1.6F;
+            this.RightArm.yRot = -0.15F;
+
+            // Calm head shake
+            this.Head.zRot += Mth.sin(ageInTicks * 0.9F) * 0.18F;
+        } else {
+
+            // WALK / RUN
+            this.RightLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
+            this.LeftLeg.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.2F * limbSwingAmount;
+
+            this.RightArm.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.2F * limbSwingAmount;
+            this.LeftArm.xRot = Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
+
+            if (entity.isSprinting()) {
+                this.RightLeg.xRot *= 1.35F;
+                this.LeftLeg.xRot *= 1.35F;
+                this.RightArm.xRot *= 1.35F;
+                this.LeftArm.xRot *= 1.35F;
+            }
+
+            // ATTACK
+            float attackProgress = entity.getAttackAnim(0.0F);
+            if (attackProgress > 0.0F) {
+                this.RightArm.xRot = -2.0F + attackProgress * 1.2F;
+            }
+        }
+
+        // ANGRY SHAKE
+        if (entity.isAngryShakeActive()) {
+            // Fast, violent, crooked head shake
+            this.Head.zRot += Mth.sin(ageInTicks * 1.9F) * 0.55F;
+        }
     }
 }

@@ -1,7 +1,6 @@
 package net.jaftsun.fromtheskies.datagen;
 
-import net.jaftsun.fromtheskies.registry.ModBlocks;
-import net.jaftsun.fromtheskies.registry.ModItems;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.DataMapProvider;

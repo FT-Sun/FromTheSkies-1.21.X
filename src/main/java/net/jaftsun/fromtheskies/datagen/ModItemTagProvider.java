@@ -1,11 +1,13 @@
 package net.jaftsun.fromtheskies.datagen;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.jaftsun.fromtheskies.registry.ModItems;
 import net.jaftsun.fromtheskies.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
@@ -35,5 +37,8 @@ public class ModItemTagProvider extends ItemTagsProvider {
         .add(ModItems.SAMPLE_SHOVEL.get());
     tag(ItemTags.HOES)
         .add(ModItems.SAMPLE_HOE.get());
+
+    this.tag(ItemTags.LOGS_THAT_BURN)
+            .add(ModBlocks.BREEM_LOG.get().asItem());
   }
 }

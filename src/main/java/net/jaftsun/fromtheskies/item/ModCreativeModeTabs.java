@@ -1,7 +1,7 @@
 package net.jaftsun.fromtheskies.item;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
-import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.jaftsun.fromtheskies.registry.ModItems;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -42,6 +42,8 @@ public class ModCreativeModeTabs {
                                 output.accept(ModBlocks.BREEM_DIRT.get());
                                 output.accept(ModBlocks.BREEM_LOG.get());
                                 output.accept(ModBlocks.BREEM_LEAF.get());
+                                output.accept(ModBlocks.BREEM_STRIPPEDLOG.get());
+                                output.accept(ModBlocks.BREEM_TREESAPLING.get());
                             })
                             .build());
 

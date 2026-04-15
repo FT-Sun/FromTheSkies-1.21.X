@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+
 import java.util.Map;
 import java.util.Objects;
 import net.minecraft.client.model.HierarchicalModel; //Added this so that BreemModel extends to the SoldierModel
@@ -39,6 +40,7 @@ public class BreemRenderer extends MobRenderer<BreemEntity, HierarchicalModel<Br
         this.defaultModel = new BreemModel<>(context.bakeLayer(BreemModel.LAYER_LOCATION));
         this.soldierModel = new BreemSoldierModel<>(context.bakeLayer(BreemSoldierModel.LAYER_LOCATION));
         this.bruteModel = new BreemBruteModel<>(context.bakeLayer(BreemBruteModel.LAYER_LOCATION));
+
 
         //default model used for villager and shaman
         this.model = this.defaultModel;

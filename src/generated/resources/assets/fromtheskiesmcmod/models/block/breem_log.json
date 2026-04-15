@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "fromtheskiesmcmod:block/breem_log_top",
+    "side": "fromtheskiesmcmod:block/breem_log"
+  }
+}
