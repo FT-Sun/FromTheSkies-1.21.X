@@ -15,6 +15,7 @@ import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSi
 import net.minecraft.world.level.levelgen.feature.foliageplacers.BlobFoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.ForkingTrunkPlacer;
+import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
 
 public class ModConfiguredFeatures {
 
@@ -25,10 +26,10 @@ public class ModConfiguredFeatures {
 
         register(context, BREEMLOG_KEY, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
                         BlockStateProvider.simple(ModBlocks.BREEM_LOG.get()),
-                        new ForkingTrunkPlacer(4, 4, 3),
+                        new StraightTrunkPlacer(5, 2, 0),
 
                         BlockStateProvider.simple(ModBlocks.BREEM_LEAF.get()),
-                        new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(3), 3),
+                        new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3),
 
                         new TwoLayersFeatureSize(1, 0, 2)
                 ).build());

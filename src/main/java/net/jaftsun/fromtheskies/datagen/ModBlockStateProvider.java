@@ -23,10 +23,14 @@ public class ModBlockStateProvider extends BlockStateProvider {
         simpleBlockWithItem(ModBlocks.BREEM_DIRT.get(), models().getExistingFile(modLoc("block/breem_dirt")));
         simpleBlockWithItem(ModBlocks.BREEM_GRASS.get(), models().getExistingFile(modLoc("block/breem_grass")));
         simpleBlockWithItem(ModBlocks.BREEM_LEAF.get(), models().getExistingFile(modLoc("block/breem_leaf")));
-        simpleBlockWithItem(ModBlocks.BREEM_TREESAPLING.get(), models().getExistingFile(modLoc("block/breem_treesappling")));
+        simpleBlockWithItem(ModBlocks.BREEM_TREESAPLING.get(), models().getExistingFile(modLoc("block/block_breem_treesappling")));
 
-        logBlock(((RotatedPillarBlock) ModBlocks.BREEM_LOG.get()));
-        logBlock(((RotatedPillarBlock) ModBlocks.BREEM_STRIPPEDLOG.get()));
+        //logBlock(((RotatedPillarBlock) ModBlocks.BREEM_LOG.get()));
+        //logBlock(((RotatedPillarBlock) ModBlocks.BREEM_STRIPPEDLOG.get()));
+        axisBlock(((RotatedPillarBlock) ModBlocks.BREEM_LOG.get()),
+                modLoc("block/breem_log"), modLoc("block/breem_log"));
+        axisBlock(((RotatedPillarBlock) ModBlocks.BREEM_STRIPPEDLOG.get()),
+                modLoc("block/breem-strippedlog"), modLoc("block/breem-strippedlog-top"));
     }
 
     private void saplingBlock(DeferredBlock<Block> blockRegistryObject) {
