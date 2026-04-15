@@ -27,10 +27,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
         //logBlock(((RotatedPillarBlock) ModBlocks.BREEM_LOG.get()));
         //logBlock(((RotatedPillarBlock) ModBlocks.BREEM_STRIPPEDLOG.get()));
-        axisBlock(((RotatedPillarBlock) ModBlocks.BREEM_LOG.get()),
-                modLoc("block/breem_log"), modLoc("block/breem_log"));
-        axisBlock(((RotatedPillarBlock) ModBlocks.BREEM_STRIPPEDLOG.get()),
-                modLoc("block/breem-strippedlog"), modLoc("block/breem-strippedlog-top"));
     }
 
     private void saplingBlock(DeferredBlock<Block> blockRegistryObject) {
