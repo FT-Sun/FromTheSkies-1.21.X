@@ -1,6 +1,7 @@
 package net.jaftsun.fromtheskies.worldgen;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
@@ -16,9 +17,14 @@ import java.util.List;
 
 public class ModPlacedFeatures {
 
+    public static final ResourceKey<PlacedFeature> BREEMLOG_PLACED_KEY = registerKey("breemlog_placed");
 
     public static void bootstrap(BootstrapContext<PlacedFeature> context) {
         var configuredFeatures = context.lookup(Registries.CONFIGURED_FEATURE);
+
+        register(context, BREEMLOG_PLACED_KEY, configuredFeatures.getOrThrow(ModConfiguredFeatures.BREEMLOG_KEY),
+                VegetationPlacements.treePlacement(PlacementUtils.countExtra(3, 0.1f, 2),
+                        ModBlocks.BREEM_TREESAPLING.get()));
 
     }
 
