@@ -1,7 +1,7 @@
 {
-	"variants": {
-		"": {
-			"model": "fromtheskiesmcmod:block/block_breem_strippedlog"
-		}
-	}
+  "variants": {
+    "axis=x": { "model": "fromtheskiesmcmod:block/block_breem_strippedlog", "x": 90, "z": 90 },
+    "axis=y": { "model": "fromtheskiesmcmod:block/block_breem_strippedlog" },
+    "axis=z": { "model": "fromtheskiesmcmod:block/block_breem_strippedlog", "x": 90 }
+  }
 }

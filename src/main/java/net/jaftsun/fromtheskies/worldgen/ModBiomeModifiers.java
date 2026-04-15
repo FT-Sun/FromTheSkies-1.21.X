@@ -1,6 +1,7 @@
 package net.jaftsun.fromtheskies.worldgen;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
+import net.jaftsun.fromtheskies.takeover.world.TakeoverBiomes;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
@@ -21,7 +22,7 @@ public class ModBiomeModifiers {
         var biomes = context.lookup(Registries.BIOME);
 
         context.register(ADD_TREE_BREEMLOG, new BiomeModifiers.AddFeaturesBiomeModifier(
-                HolderSet.direct(biomes.getOrThrow(Biomes.ALIEN_OVERGROWTH)),
+                HolderSet.direct(biomes.getOrThrow(TakeoverBiomes.ALIEN_OVERGROWTH)),
                         HolderSet.direct(placedFeatures.getOrThrow(ModPlacedFeatures.BREEMLOG_PLACED_KEY)),
                         GenerationStep.Decoration.VEGETAL_DECORATION));
 

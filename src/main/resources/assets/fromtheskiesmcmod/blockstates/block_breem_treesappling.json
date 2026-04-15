@@ -1,7 +1,6 @@
 {
-	"variants": {
-		"": {
-			"model": "fromtheskiesmcmod:block/block_breem_treesappling"
-		}
-	}
+  "variants": {
+    "stage=0": { "model": "fromtheskiesmcmod:block/block_breem_treesappling" },
+    "stage=1": { "model": "fromtheskiesmcmod:block/block_breem_treesappling" }
+  }
 }
