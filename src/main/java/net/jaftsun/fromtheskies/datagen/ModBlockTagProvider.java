@@ -36,5 +36,11 @@ public class ModBlockTagProvider extends BlockTagsProvider {
     this.tag(BlockTags.LOGS_THAT_BURN)
             .add(ModBlocks.BREEM_LOG.get());
 
+    this.tag(BlockTags.DIRT).add(ModBlocks.BREEM_DIRT.get()).add(ModBlocks.BREEM_GRASS.get());
+
+    this.tag(BlockTags.LOGS).add(ModBlocks.BREEM_LOG.get()).add(ModBlocks.BREEM_STRIPPEDLOG.get());
+
+    this.tag(BlockTags.LEAVES).add(ModBlocks.BREEM_LEAF.get());
+
   }
 }
