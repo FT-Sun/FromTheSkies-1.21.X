@@ -12,6 +12,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 public class BreemBruteModel<T extends BreemEntity> extends HierarchicalModel<T> {
 
@@ -119,8 +120,42 @@ public class BreemBruteModel<T extends BreemEntity> extends HierarchicalModel<T>
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
         // Basic head look rotation for now.
-        // We can add brute-specific animations later.
         this.Head.yRot = netHeadYaw * ((float) Math.PI / 180F);
         this.Head.xRot = headPitch * ((float) Math.PI / 180F);
+
+
+
+        //Interact diamonds
+        if (entity.isInspectAnimationActive()) {
+            this.RightArm.xRot = -1.5F;
+            this.RightArm.yRot = -0.15F;
+            //calm shake
+            this.Head.zRot += Mth.sin(ageInTicks * 0.9F) * 0.18F;
+        } else {
+            // WALK / RUN
+            this.RightLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
+            this.LeftLeg.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.2F * limbSwingAmount;
+
+            this.RightArm.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.2F * limbSwingAmount;
+            this.LeftArm.xRot = Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
+
+            if (entity.isSprinting()) {
+                this.RightLeg.xRot *= 1.35F;
+                this.LeftLeg.xRot *= 1.35F;
+                this.RightArm.xRot *= 1.35F;
+                this.LeftArm.xRot *= 1.35F;
+            }
+            //Attack
+            float attackProgress = entity.getAttackAnim(0.0F);
+            if (attackProgress > 0.0F) {
+                this.RightArm.xRot = -2.0F + attackProgress * 1.2F;
+            }
+        }
+
+        //Angry Shake
+        if (entity.isAngryShakeActive() || entity.isAggressive() || entity.getTarget() != null) {
+            //this.Head.yRot += Mth.sin(ageInTicks * 1.8F) * 0.55F;
+            this.Head.zRot += Mth.sin(ageInTicks * 1.9F) * 0.55F;
+        }
     }
 }
