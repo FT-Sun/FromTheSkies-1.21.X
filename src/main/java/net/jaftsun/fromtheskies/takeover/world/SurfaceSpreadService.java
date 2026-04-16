@@ -179,7 +179,16 @@ public final class SurfaceSpreadService {
     private static boolean isEligibleSurfaceBlock(BlockState state) {
         return !state.isAir()
                 && state.getFluidState().isEmpty()
-                && !state.is(ModBlocks.ALIEN_CORE.get());
+                && !state.is(ModBlocks.ALIEN_CORE.get())
+                /*Exclude logs and leaves so the spread dont places
+                breem_grass on top of trees, replace leaf blocks, or
+                on top of building/structures made of wood
+                tree infections is handled separately by tryInfectTreeAbove
+                * */
+                && !state.is(net.minecraft.tags.BlockTags.LOGS)
+                && !state.is(net.minecraft.tags.BlockTags.LEAVES)
+                && !state.is(ModBlocks.BREEM_LOG.get())
+                && !state.is(ModBlocks.BREEM_LEAF.get());
     }
 
     private static void seedInitialInfectionIfNeeded(ServerLevel level, TakeoverSavedData data) {
@@ -313,8 +322,7 @@ public final class SurfaceSpreadService {
             if (state.is(net.minecraft.tags.BlockTags.LOGS)) {
                 level.setBlock(convertPos, ModBlocks.BREEM_LOG.get().defaultBlockState(), 3);
             } else if (state.is(net.minecraft.tags.BlockTags.LEAVES)) {
-                level.setBlock(convertPos, ModBlocks.BREEM_LEAF.get().defaultBlockState()
-                        .setValue(net.minecraft.world.level.block.LeavesBlock.PERSISTENT, true), 3);
+                level.setBlock(convertPos, ModBlocks.BREEM_LEAF.get().defaultBlockState(), 3);
             }
         }
     }
