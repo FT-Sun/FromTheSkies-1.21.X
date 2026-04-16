@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
-import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.jaftsun.fromtheskies.takeover.TakeoverRegistryGameTests;
 import net.jaftsun.fromtheskies.takeover.event.TakeoverServerEvents;
 import net.minecraft.util.FastColor;
@@ -27,7 +27,6 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
@@ -76,6 +75,8 @@ public class FromTheSkies {
       event.accept(ModBlocks.BREEM_DIRT);
       event.accept(ModBlocks.BREEM_LOG);
       event.accept(ModBlocks.BREEM_LEAF);
+      event.accept(ModBlocks.BREEM_STRIPPEDLOG);
+      event.accept(ModBlocks.BREEM_TREESAPLING);
     }
 
     if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
@@ -110,7 +111,8 @@ public class FromTheSkies {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
       EntityRenderers.register(ModEntities.BREEM.get(), BreemRenderer::new);
-//      ItemBlockRenderTypes.setRenderLayer(ModBlocks.BREEM_LEAF.get(), RenderType.cutout());
+      ItemBlockRenderTypes.setRenderLayer(ModBlocks.BREEM_LEAF.get(), RenderType.cutout());
+      ItemBlockRenderTypes.setRenderLayer(ModBlocks.BREEM_TREESAPLING.get(), RenderType.cutout());
     }
 
     @SubscribeEvent

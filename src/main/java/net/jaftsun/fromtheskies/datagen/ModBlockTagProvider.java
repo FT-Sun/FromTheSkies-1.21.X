@@ -1,7 +1,7 @@
 package net.jaftsun.fromtheskies.datagen;
 
 import net.jaftsun.fromtheskies.FromTheSkies;
-import net.jaftsun.fromtheskies.registry.ModBlocks;
+import net.jaftsun.fromtheskies.block.ModBlocks;
 import net.jaftsun.fromtheskies.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -32,5 +32,15 @@ public class ModBlockTagProvider extends BlockTagsProvider {
     tag(ModTags.Blocks.INCORRECT_FOR_SAMPLE_TOOL)
         .addTag(BlockTags.INCORRECT_FOR_DIAMOND_TOOL)
         .remove(ModTags.Blocks.NEEDS_SAMPLE_TOOL);
+
+    this.tag(BlockTags.LOGS_THAT_BURN)
+            .add(ModBlocks.BREEM_LOG.get());
+
+    this.tag(BlockTags.DIRT).add(ModBlocks.BREEM_DIRT.get()).add(ModBlocks.BREEM_GRASS.get());
+
+    this.tag(BlockTags.LOGS).add(ModBlocks.BREEM_LOG.get()).add(ModBlocks.BREEM_STRIPPEDLOG.get());
+
+    this.tag(BlockTags.LEAVES).add(ModBlocks.BREEM_LEAF.get());
+
   }
 }

@@ -25,19 +25,38 @@ public class BreemEntity extends Piglin {
 
     private static final EntityDataAccessor<Integer> DATA_VARIANT_ID =
             SynchedEntityData.defineId(BreemEntity.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Boolean> DATA_INSPECTING =
+            SynchedEntityData.defineId(BreemEntity.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean> DATA_ANGRY_SHAKING =
+            SynchedEntityData.defineId(BreemEntity.class, EntityDataSerializers.BOOLEAN);
 
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState attackAnimationState = new AnimationState();
+    //Custoom timers for head animations
+    private int inspectAnimationTicks = 0;
+    private int angryShakeTicks = 0;
+    private int barterCooldownTicks = 0;
+
+    private boolean provoked = false;
 
     public BreemEntity(EntityType<? extends AbstractPiglin> entityType, Level level) {
         super(entityType, level);
         this.setImmuneToZombification(true);
+        this.setCanPickUpLoot(false);
+        this.setBaby(false);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ItemStack stack){
+        return false;
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_VARIANT_ID, BreemVariant.UNSET.getId());
+        builder.define(DATA_INSPECTING, false);
+        builder.define(DATA_ANGRY_SHAKING, false);
     }
 
     public BreemVariant getVariant() {
@@ -52,7 +71,34 @@ public class BreemEntity extends Piglin {
     public void tick() {
         super.tick();
 
-        if (this.level().isClientSide()) {
+        if (this.isBaby()){
+            this.setBaby(false);
+        }
+
+        //Freeze movement while inspecting
+        if (this.isInspectAnimationActive()){
+            this.setDeltaMovement(0.0D, this.getDeltaMovement().y, 0.0D);
+            this.getNavigation().stop();
+        }
+
+        if (this.inspectAnimationTicks > 0) {
+            this.inspectAnimationTicks--;
+            if (this.inspectAnimationTicks == 0){
+                this.entityData.set(DATA_INSPECTING, false);
+
+                //Remove diamond after inspecting
+                this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            }
+        }
+
+        if (this.barterCooldownTicks > 0){
+            this.barterCooldownTicks--;
+            if (this.barterCooldownTicks == 0 && !this.level().isClientSide){
+                doSimpleDiamondBarter((ServerLevel) this.level());
+            }
+        }
+
+        if (this.level().isClientSide()){
             setupAnimationStates();
         }
     }
@@ -74,9 +120,37 @@ public class BreemEntity extends Piglin {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
+        //Remove inherited pigling gear
+        if (!this.isInspectAnimationActive()){
+            this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        }
+        this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
 
-        if (this.getTarget() instanceof Player player && isPlayerSafeFromBreem(player)) {
-            this.setTarget(null);
+        // Stop moving while inspecting
+        if (this.isInspectAnimationActive()) {
+            this.getNavigation().stop();
+            this.setDeltaMovement(0.0D, this.getDeltaMovement().y, 0.0D);
+            this.zza = 0.0F;
+            this.xxa = 0.0F;
+        }
+
+        if (this.getTarget() instanceof Player player ) {
+            if (player.isCreative() || player.isSpectator() || !player.isAlive()) {
+                this.setTarget(null);
+                this.setAggressive(false);
+                this.provoked = false;
+            }
+        }
+
+        //If no target, no recent anger state, calm down
+        if (this.getTarget() == null && !this.level().isClientSide){
+            this.setAggressive(false);
+        }
+
+        if (this.getTarget() == null || !this.isAggressive()){
+            this.entityData.set(DATA_ANGRY_SHAKING, false);
+        } else {
+            this.entityData.set(DATA_ANGRY_SHAKING, true);
         }
     }
 
@@ -91,12 +165,38 @@ public class BreemEntity extends Piglin {
 //    }
 
     @Override
-    public void setTarget(@Nullable LivingEntity target) {
-        if (target instanceof Player player && isPlayerSafeFromBreem(player)) {
-            super.setTarget(null);
-            return;
+    public boolean canAttack(LivingEntity target) {
+        if (target instanceof Player player) {
+            //Never attack creative or spectator
+            if(player.isCreative() || player.isSpectator()){
+                return false;
+            }
+
+            // Never attack players who are safe with diamonds
+            if (this.provoked){
+                return true;
+            }
+            //If not provoked, only attack players who are NOT safe with diamonds
+            return !isPlayerSafeFromBreem(player);
         }
 
+        return super.canAttack(target);
+    }
+
+    @Override
+    public void setTarget(@Nullable LivingEntity target) {
+        if (target instanceof Player player) {
+            //Ignore creative and specators players
+            if(player.isCreative() || player.isSpectator()){
+                super.setTarget(null);
+                return;
+            }
+            //If not provoked yet, only target players who are not safe
+            if (!this.provoked && isPlayerSafeFromBreem(player)){
+                super.setTarget(null);
+                return;
+            }
+        }
         super.setTarget(target);
     }
 
@@ -104,15 +204,28 @@ public class BreemEntity extends Piglin {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        if (!this.level().isClientSide && canDiamondBarter(player, stack)) {
-            if (!player.getAbilities().instabuild) {
-                stack.shrink(1);
+        if (canDiamondBarter(player, stack)) {
+            if(!this.level().isClientSide) {
+                if (!player.getAbilities().instabuild) {
+                    stack.shrink(1);
+                }
+
+
+                //Calm them down when diamond is offered
+                this.provoked = false;
+                this.setTarget(null);
+                //Start head animation inspect
+                this.startInspectAnimation();
+                //Wait before giving reward
+                this.barterCooldownTicks = 40;
+
+                //doSimpleDiamondBarter((ServerLevel) this.level());
+
+                this.playSound(SoundEvents.PIGLIN_ADMIRING_ITEM, 1.0F, 1.0F);
+
             }
 
-            doSimpleDiamondBarter((ServerLevel) this.level());
-
-            this.playSound(SoundEvents.PIGLIN_ADMIRING_ITEM, 1.0F, 1.0F);
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
 
         return super.mobInteract(player, hand);
@@ -120,9 +233,7 @@ public class BreemEntity extends Piglin {
 
     private boolean canDiamondBarter(Player player, ItemStack stack) {
         return !this.isBaby()
-                && this.getTarget() == null
                 && stack.is(Items.DIAMOND)
-                && !this.isAggressive()
                 && this.distanceTo(player) <= 6.0F;
     }
 
@@ -160,6 +271,8 @@ public class BreemEntity extends Piglin {
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType,
                                         @Nullable SpawnGroupData spawnGroupData) {
 
+        SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+
         if (this.getVariant() == BreemVariant.UNSET) {
             int pick = level.getRandom().nextInt(4);
 
@@ -172,7 +285,11 @@ public class BreemEntity extends Piglin {
         }
 
         this.setImmuneToZombification(true);
-        return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+        this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+        this.setCanPickUpLoot(false);
+        this.setBaby(false);
+        return data;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -180,6 +297,60 @@ public class BreemEntity extends Piglin {
                 .add(Attributes.MAX_HEALTH, 24.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.35D)
                 .add(Attributes.ATTACK_DAMAGE, 5.0D);
+    }
+
+    public void startInspectAnimation(){
+        this.inspectAnimationTicks = 40;
+        this.entityData.set(DATA_INSPECTING, true);
+
+        //Show diamond in hand
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND));
+    }
+    public boolean isInspectAnimationActive(){
+        return this.entityData.get(DATA_INSPECTING);
+    }
+    public void startAngryShakeAnimation(){
+        this.entityData.set(DATA_ANGRY_SHAKING, true);
+    }
+    public boolean isAngryShakeActive(){
+        return  this.entityData.get(DATA_ANGRY_SHAKING);
+    }
+
+
+    @Override
+    public boolean hurt(net.minecraft.world.damagesource.DamageSource source, float amount){
+        boolean result = super.hurt(source, amount);
+
+        if (result) {
+            this.provoked = true;
+            this.startAngryShakeAnimation();
+            this.setAggressive(true);
+
+            if (source.getEntity() instanceof LivingEntity living) {
+                super.setTarget(living);
+                //Alert nearby Breems
+                this.alertNearbyBreems(living);
+            }
+        }
+
+        return result;
+    }
+
+    private void alertNearbyBreems (LivingEntity target){
+        double radius = 12.0D;
+
+        for (BreemEntity nearby : this.level().getEntitiesOfClass(
+                BreemEntity.class,
+                this.getBoundingBox().inflate(radius))){
+
+            if (nearby != this){
+                nearby.provoked = true;
+                nearby.startAngryShakeAnimation();
+                nearby.setAggressive(true);
+                nearby.setTarget(target);
+            }
+
+        }
     }
 
 }
