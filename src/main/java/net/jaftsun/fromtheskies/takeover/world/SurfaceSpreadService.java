@@ -12,24 +12,24 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
  * Local adjacency spread engine plus chunk-level infection accounting.
  */
 public final class SurfaceSpreadService {
     // Preferred offsets used to seed first infection around the landed core.
-    private static final int[][] INITIAL_SEED_OFFSETS = new int[][] {
-            { 1, 0 },
-            { -1, 0 },
-            { 0, 1 },
-            { 0, -1 },
-            { 0, 0 },
-            { 1, 1 },
-            { 1, -1 },
-            { -1, 1 },
-            { -1, -1 }
+    private static final int[][] INITIAL_SEED_OFFSETS = new int[][]{
+            {1, 0},
+            {-1, 0},
+            {0, 1},
+            {0, -1},
+            {0, 0},
+            {1, 1},
+            {1, -1},
+            {-1, 1},
+            {-1, -1}
     };
 
     private SurfaceSpreadService() {
@@ -166,19 +166,14 @@ public final class SurfaceSpreadService {
     private static BlockPos findTopEligibleSurface(ServerLevel level, int x, int z) {
         int minY = level.getMinBuildHeight();
         int maxY = level.getMaxBuildHeight() - 1;
-        // First non-air block from the top is the only candidate for that column.
-        for (int y = maxY; y >= minY; y--) {
-            BlockPos candidate = new BlockPos(x, y, z);
-            BlockState state = level.getBlockState(candidate);
-            if (state.isAir()) {
-                continue;
-            }
-            if (isEligibleSurfaceBlock(state) && (y == maxY || level.getBlockState(candidate.above()).isAir())) {
-                return candidate;
-            }
+        // Heightmap returns the first open block above the no-leaves surface, so step down to the surface block.
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+        if (y < minY || y > maxY) {
             return null;
         }
-        return null;
+        BlockPos candidate = new BlockPos(x, y, z);
+        BlockState state = level.getBlockState(candidate);
+        return isEligibleSurfaceBlock(state) ? candidate : null;
     }
 
     private static boolean isEligibleSurfaceBlock(BlockState state) {
@@ -226,9 +221,101 @@ public final class SurfaceSpreadService {
     }
 
     private static void applyVisualInfection(ServerLevel level, BlockPos pos) {
-        if (!level.getBlockState(pos).is(Blocks.SCULK)) {
-            // Flag 3 = notify neighbors (1) + send block update to clients (2).
-            level.setBlock(pos, Blocks.SCULK.defaultBlockState(), 3);
+        BlockState current = level.getBlockState(pos);
+        if (current.is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK)) {
+            if (!current.is(ModBlocks.BREEM_GRASS.get())) {
+                level.setBlock(pos, ModBlocks.BREEM_GRASS.get().defaultBlockState(), 3);
+            }
+        } else if (current.is(net.minecraft.tags.BlockTags.DIRT)) {
+            if (!current.is(ModBlocks.BREEM_DIRT.get())) {
+                // Flag 3 = notify neighbors (1) + send block update to clients (2).
+                level.setBlock(pos, ModBlocks.BREEM_DIRT.get().defaultBlockState(), 3);
+            }
+        } else if (!current.is(ModBlocks.BREEM_GRASS.get())) {
+            //Flag 3 = notify neighbors (1) ! send block update to clients (2)
+            level.setBlock(pos, ModBlocks.BREEM_GRASS.get().defaultBlockState(), 3);
+        }
+        tryInfectiTreeAbove(level, pos);
+    }
+
+    private static void tryInfectiTreeAbove(ServerLevel level, BlockPos surfacePos) {
+        // Check directly above the infected surface block first,
+        // then also check all 4 cardinal neighbors at surface level.
+        // This handles trees whose base is adjacent to the infected block
+        // since the heightmap returns the log position not the dirt under it.
+        List<BlockPos> logBases = new ArrayList<>();
+
+        // Check directly above
+        if (level.getBlockState(surfacePos.above()).is(net.minecraft.tags.BlockTags.LOGS)) {
+            logBases.add(surfacePos.above());
+        }
+
+        // Check all 4 cardinal neighbors — if the block at their level
+        // or one above is a log, that's a tree base next to us
+        for (Direction dir : new Direction[]{Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST}) {
+            BlockPos neighbor = surfacePos.relative(dir);
+            // Check at same Y and one above to catch trees on slightly different terrain
+            for (int yOffset = -1; yOffset <= 2; yOffset++) {
+                BlockPos check = neighbor.above(yOffset);
+                if (level.getBlockState(check).is(net.minecraft.tags.BlockTags.LOGS)) {
+                    logBases.add(check);
+                    // Also convert the dirt directly under this log to breem_dirt
+                    BlockPos dirtPos = check.below();
+                    BlockState dirtState = level.getBlockState(dirtPos);
+                    if (dirtState.is(net.minecraft.tags.BlockTags.DIRT)
+                            && !dirtState.is(ModBlocks.BREEM_DIRT.get())) {
+                        level.setBlock(dirtPos, ModBlocks.BREEM_DIRT.get().defaultBlockState(), 3);
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (logBases.isEmpty()) {
+            return;
+        }
+
+        // BFS flood fill from each log base we found —
+        // convert all connected logs and leaves to breem blocks
+        java.util.Set<BlockPos> visited = new java.util.HashSet<>();
+        java.util.Queue<BlockPos> queue = new java.util.LinkedList<>();
+
+        for (BlockPos base : logBases) {
+            if (!visited.contains(base)) {
+                queue.add(base);
+                visited.add(base);
+            }
+        }
+
+        // Safety cap to prevent freezing the server on massive log structures
+        int cap = 300;
+
+        while (!queue.isEmpty() && visited.size() < cap) {
+            BlockPos current = queue.poll();
+
+            // Check all 6 directions for connected logs or leaves
+            for (Direction dir : Direction.values()) {
+                BlockPos neighbor = current.relative(dir);
+                if (visited.contains(neighbor)) continue;
+                BlockState neighborState = level.getBlockState(neighbor);
+                if (neighborState.is(net.minecraft.tags.BlockTags.LOGS)
+                        || neighborState.is(net.minecraft.tags.BlockTags.LEAVES)) {
+                    visited.add(neighbor);
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        // Apply conversions — logs become BREEM_LOG, leaves become BREEM_LEAF
+        // Flag 3 = notify neighbors (1) + send block update to clients (2)
+        for (BlockPos convertPos : visited) {
+            BlockState state = level.getBlockState(convertPos);
+            if (state.is(net.minecraft.tags.BlockTags.LOGS)) {
+                level.setBlock(convertPos, ModBlocks.BREEM_LOG.get().defaultBlockState(), 3);
+            } else if (state.is(net.minecraft.tags.BlockTags.LEAVES)) {
+                level.setBlock(convertPos, ModBlocks.BREEM_LEAF.get().defaultBlockState()
+                        .setValue(net.minecraft.world.level.block.LeavesBlock.PERSISTENT, true), 3);
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ import net.jaftsun.fromtheskies.takeover.world.GeneratedChunkIndexService;
 import net.jaftsun.fromtheskies.takeover.world.MeteorSchedulerService;
 import net.jaftsun.fromtheskies.takeover.world.BiomeConversionService;
 import net.jaftsun.fromtheskies.takeover.world.SurfaceSpreadService;
+import net.jaftsun.fromtheskies.takeover.world.TakeoverBiomes;
 import net.jaftsun.fromtheskies.takeover.world.TakeoverCoreService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -455,7 +456,7 @@ public final class TakeoverRegistryGameTests {
         data.hasInfectedSurfaceBlock(seedCandidate),
         "Expected deterministic nearest eligible surface around core to be seeded as infected");
     helper.assertTrue(
-        level.getBlockState(seedCandidate).is(Blocks.SCULK),
+        level.getBlockState(seedCandidate).is(ModBlocks.BREEM_GRASS.get()),
         "Expected seeded infection to mutate the world block for visible takeover progression");
     helper.succeed();
   }
@@ -479,7 +480,7 @@ public final class TakeoverRegistryGameTests {
     helper.assertTrue(spread, "Expected grass-like local spread to operate on natural surface blocks");
     helper.assertTrue(data.hasInfectedSurfaceBlock(target), "Expected target natural surface block to become infected");
     helper.assertTrue(
-        level.getBlockState(target).is(Blocks.SCULK),
+        level.getBlockState(target).is(ModBlocks.BREEM_GRASS.get()),
         "Expected infected natural surface block to visually convert for client validation");
     helper.succeed();
   }
@@ -543,8 +544,11 @@ public final class TakeoverRegistryGameTests {
     data.resetForTesting();
     data.setState(TakeoverLifecycleState.ACTIVE);
 
-    BlockPos source = new BlockPos(15, 80, 0);
-    BlockPos target = new BlockPos(16, 80, 0);
+    BlockPos origin = helper.absolutePos(new BlockPos(0, 2, 0));
+    // Pick a source/target pair that definitely crosses a real chunk boundary near this test instance.
+    int sourceX = origin.getX() + Math.floorMod(15 - Math.floorMod(origin.getX(), 16), 16);
+    BlockPos source = new BlockPos(sourceX, origin.getY(), origin.getZ());
+    BlockPos target = source.east();
     level.setBlock(source, Blocks.STONE.defaultBlockState(), 3);
     level.setBlock(target, Blocks.STONE.defaultBlockState(), 3);
 
@@ -690,6 +694,26 @@ public final class TakeoverRegistryGameTests {
     boolean idempotentRecheck = BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, 0.4D);
     helper.assertTrue(!idempotentRecheck, "Expected repeated threshold checks to remain idempotent after conversion");
     helper.assertTrue(data.getConvertedChunkCount() == 1, "Expected converted chunk count to remain stable after recheck");
+    helper.succeed();
+  }
+
+  @GameTest(template = "empty")
+  public static void chunk_threshold_biome_flip_updates_chunk_biome(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    TakeoverSavedData data = TakeoverSavedData.get(level);
+    data.resetForTesting();
+
+    ChunkPos chunkPos = new ChunkPos(helper.absolutePos(new BlockPos(1, 1, 1)));
+    data.setEligibleSurfaceCount(chunkPos, 10);
+    data.setInfectedSurfaceCount(chunkPos, 10);
+
+    boolean converted = BiomeConversionService.applyChunkThresholdCheck(level, data, chunkPos, 0.5D);
+    helper.assertTrue(converted, "Expected threshold hit to trigger biome conversion");
+
+    BlockPos samplePos = new BlockPos(chunkPos.getMiddleBlockX(), level.getMinBuildHeight(), chunkPos.getMiddleBlockZ());
+    helper.assertTrue(
+        level.getBiome(samplePos).is(TakeoverBiomes.ALIEN_OVERGROWTH),
+        "Expected converted chunk biome sample to resolve to alien_overgrowth");
     helper.succeed();
   }
 
